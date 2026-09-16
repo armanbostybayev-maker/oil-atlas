@@ -1,0 +1,202 @@
+{
+  "checks": [
+    "Overlay zones at 1920, 1600, 1440 and 1366; menu and country never coexist",
+    "Single analysis, correct legend, no viewport reset across every mode",
+    "Accessible indicator keyboard and Russian labels",
+    "Countries update one card; refinery search, map click and popup; comparison and quality",
+    "Complete company filter and reset preserves analysis and filters",
+    "OSM / satellite / topo preserve country, analytics, labels and refinery sources"
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "failed": [
+    {
+      "url": "https://tile.openstreetmap.org/5/23/11.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/23/10.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/21/9.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/22/9.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/20/12.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/20/9.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/21/13.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/19/10.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/24/11.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/24/10.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/20/13.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/19/12.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/23/13.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/24/12.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.openstreetmap.org/5/19/9.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/11/22",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/10/21",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/10/22",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/11/23",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/13/21",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/13/22",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/11/19",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/10/19",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/11/24",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/10/24",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/13/20",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/12/19",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/13/23",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/12/24",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/9/19",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/5/9/24",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/22/11.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/21/10.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/21/12.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/23/11.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/23/10.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/21/9.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/22/9.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/20/9.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/23/9.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/21/13.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/22/13.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/19/11.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/19/10.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/24/11.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/24/10.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://tile.opentopomap.org/5/20/13.png",
+      "error": "net::ERR_ABORTED"
+    }
+  ]
+}

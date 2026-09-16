@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "All companies, search and selection beyond top ten",
+    "Legend never covered by burger on desktop, laptop or narrow screen"
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "failed": []
+}

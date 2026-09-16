@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "Panel width +30%, text +60%",
+    "Russian switch, labels and live map preserved",
+    "All 13 analysis help dialogs, no mode change and focus return",
+    "Russian status filter preserves source IDs and URL",
+    "Russian country details and comparison",
+    "Russian diagnostic text",
+    "Laptop layout",
+    "Narrow layout and dialog scrolling",
+    "Return to English"
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "failed": []
+}

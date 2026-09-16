@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "Production build: local worker, rendered map, country search"
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "failed": []
+}

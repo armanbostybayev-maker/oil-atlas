@@ -1,0 +1,540 @@
+{
+  "totalRefineries": 658,
+  "countryRecords": 258,
+  "matched": 657,
+  "unmatched": [
+    {
+      "id": "160",
+      "name": "Okinawa Sekiyu Seisei / Yonashiro record",
+      "coordinates": [
+        127.9628277,
+        26.3511134
+      ],
+      "country": null,
+      "method": "outside tolerance",
+      "candidates": [
+        [
+          "190",
+          6.093362924163571
+        ],
+        [
+          "10",
+          666.3939520698518
+        ]
+      ]
+    }
+  ],
+  "coastalFallback": [
+    {
+      "id": "4",
+      "name": "Kurnell Refinery",
+      "country": "177",
+      "method": "coastal fallback",
+      "distanceKm": 0.8985703058701201
+    },
+    {
+      "id": "10",
+      "name": "Napa Napa Refinery",
+      "country": "161",
+      "method": "coastal fallback",
+      "distanceKm": 0.8369974187203332
+    },
+    {
+      "id": "20",
+      "name": "Nasr Petroleum Company – Suez Refinery",
+      "country": "162",
+      "method": "coastal fallback",
+      "distanceKm": 0.023402558891231218
+    },
+    {
+      "id": "23",
+      "name": "Suez Oil Processing Company – Suez Refinery",
+      "country": "162",
+      "method": "coastal fallback",
+      "distanceKm": 0.07552291349351377
+    },
+    {
+      "id": "36",
+      "name": "SONARA Limbe Refinery",
+      "country": "147",
+      "method": "coastal fallback",
+      "distanceKm": 0.41028324923799775
+    },
+    {
+      "id": "49",
+      "name": "Kenya Petroleum Refineries Limited (KPRL), Mombasa",
+      "country": "17",
+      "method": "coastal fallback",
+      "distanceKm": 1.341555061935179
+    },
+    {
+      "id": "51",
+      "name": "Engen Durban Refinery (ENREF)",
+      "country": "37",
+      "method": "coastal fallback",
+      "distanceKm": 0.0015830019561725406
+    },
+    {
+      "id": "53",
+      "name": "SAPREF Refinery, Durban",
+      "country": "37",
+      "method": "coastal fallback",
+      "distanceKm": 0.044982899235139796
+    },
+    {
+      "id": "57",
+      "name": "Brunei Shell Refinery, Seria",
+      "country": "120",
+      "method": "coastal fallback",
+      "distanceKm": 0.32777715518107925
+    },
+    {
+      "id": "90",
+      "name": "Sinopec Tianjin Petrochemical",
+      "country": "10",
+      "method": "coastal fallback",
+      "distanceKm": 0.8762743893636558
+    },
+    {
+      "id": "102",
+      "name": "Shanghai Petrochemical Company Limited record 2",
+      "country": "10",
+      "method": "coastal fallback",
+      "distanceKm": 0.43703371049334955
+    },
+    {
+      "id": "122",
+      "name": "HPCL Visakh Refinery",
+      "country": "9",
+      "method": "coastal fallback",
+      "distanceKm": 0.13741107252497095
+    },
+    {
+      "id": "124",
+      "name": "BPCL Kochi Refinery",
+      "country": "9",
+      "method": "coastal fallback",
+      "distanceKm": 0.3190077302532119
+    },
+    {
+      "id": "126",
+      "name": "Pertamina Refinery Unit V Balikpapan",
+      "country": "1",
+      "method": "coastal fallback",
+      "distanceKm": 0.43333166326356304
+    },
+    {
+      "id": "133",
+      "name": "Pertamina Sungai Pakning Refinery",
+      "country": "1",
+      "method": "coastal fallback",
+      "distanceKm": 0.7313805136268681
+    },
+    {
+      "id": "139",
+      "name": "Cosmo Oil Chiba Refinery",
+      "country": "190",
+      "method": "coastal fallback",
+      "distanceKm": 0.252969719062919
+    },
+    {
+      "id": "143",
+      "name": "Idemitsu Kosan Aichi Complex",
+      "country": "190",
+      "method": "coastal fallback",
+      "distanceKm": 0.0031171270960707047
+    },
+    {
+      "id": "153",
+      "name": "Cosmo Oil Sakaide Refinery",
+      "country": "190",
+      "method": "coastal fallback",
+      "distanceKm": 4.304484772089594
+    },
+    {
+      "id": "155",
+      "name": "Japan Energy Mizushima record",
+      "country": "190",
+      "method": "coastal fallback",
+      "distanceKm": 0.06873114094028528
+    },
+    {
+      "id": "156",
+      "name": "ENEOS Oita Refinery",
+      "country": "190",
+      "method": "coastal fallback",
+      "distanceKm": 1.5296656837844973
+    },
+    {
+      "id": "157",
+      "name": "Nansei Sekiyu Nishihara/Okinawa Refinery",
+      "country": "190",
+      "method": "coastal fallback",
+      "distanceKm": 0.8856438756407341
+    },
+    {
+      "id": "158",
+      "name": "ENEOS Mizushima Refinery",
+      "country": "190",
+      "method": "coastal fallback",
+      "distanceKm": 0.00018533003348077562
+    },
+    {
+      "id": "159",
+      "name": "ENEOS Marifu Refinery",
+      "country": "190",
+      "method": "coastal fallback",
+      "distanceKm": 0.2505881693726936
+    },
+    {
+      "id": "163",
+      "name": "Tonen/General Wakayama Refinery",
+      "country": "190",
+      "method": "coastal fallback",
+      "distanceKm": 0.4822717657580737
+    },
+    {
+      "id": "174",
+      "name": "Petron Bataan Refinery, Limay",
+      "country": "183",
+      "method": "coastal fallback",
+      "distanceKm": 0.4129683777112275
+    },
+    {
+      "id": "177",
+      "name": "ExxonMobil Singapore Refinery — Jurong & Pulau Ayer Chawan",
+      "country": "231",
+      "method": "coastal fallback",
+      "distanceKm": 3.8492885953573355
+    },
+    {
+      "id": "178",
+      "name": "Bukom Energy & Chemicals Park / former Shell Pulau Bukom Refinery",
+      "country": "231",
+      "method": "coastal fallback",
+      "distanceKm": 4.597166246848174
+    },
+    {
+      "id": "179",
+      "name": "Singapore Refining Company (SRC), Jurong Island",
+      "country": "231",
+      "method": "coastal fallback",
+      "distanceKm": 3.203952277057104
+    },
+    {
+      "id": "184",
+      "name": "Hyundai Oil Refinery Incheon record",
+      "country": "25",
+      "method": "coastal fallback",
+      "distanceKm": 0.6519609757601436
+    },
+    {
+      "id": "185",
+      "name": "GS Caltex Yeosu Complex",
+      "country": "25",
+      "method": "coastal fallback",
+      "distanceKm": 1.1514238570519417
+    },
+    {
+      "id": "190",
+      "name": "CPC Dalin Refinery",
+      "country": "189",
+      "method": "coastal fallback",
+      "distanceKm": 0.3038793980024024
+    },
+    {
+      "id": "192",
+      "name": "Formosa Mailiao Refinery",
+      "country": "189",
+      "method": "coastal fallback",
+      "distanceKm": 0.5082165719792524
+    },
+    {
+      "id": "204",
+      "name": "Cnergyico Refining Complex, Hub/Balochistan",
+      "country": "109",
+      "method": "coastal fallback",
+      "distanceKm": 0.7541925831905405
+    },
+    {
+      "id": "228",
+      "name": "Lavan Oil Refinery",
+      "country": "93",
+      "method": "coastal fallback",
+      "distanceKm": 0.15539598599823837
+    },
+    {
+      "id": "247",
+      "name": "Hamriyah / Sharjah Oil Refining record",
+      "country": "59",
+      "method": "coastal fallback",
+      "distanceKm": 0.30384953263359127
+    },
+    {
+      "id": "263",
+      "name": "TotalEnergies Donges Refinery",
+      "country": "22",
+      "method": "coastal fallback",
+      "distanceKm": 0.2792594858570384
+    },
+    {
+      "id": "267",
+      "name": "Petroineos Lavera Refinery",
+      "country": "22",
+      "method": "coastal fallback",
+      "distanceKm": 0.5990088410688761
+    },
+    {
+      "id": "308",
+      "name": "Naantali Refinery (closed)",
+      "country": "55",
+      "method": "coastal fallback",
+      "distanceKm": 0.2794987142407471
+    },
+    {
+      "id": "310",
+      "name": "Equinor Mongstad Refinery",
+      "country": "53",
+      "method": "coastal fallback",
+      "distanceKm": 1.6911405075518608
+    },
+    {
+      "id": "311",
+      "name": "Slagen Refinery (closed)",
+      "country": "53",
+      "method": "coastal fallback",
+      "distanceKm": 0.6085535010179609
+    },
+    {
+      "id": "313",
+      "name": "Nynas Nynäshamn Refinery",
+      "country": "54",
+      "method": "coastal fallback",
+      "distanceKm": 0.8512260385175262
+    },
+    {
+      "id": "314",
+      "name": "Preem Lysekil Refinery",
+      "country": "54",
+      "method": "coastal fallback",
+      "distanceKm": 0.4707839937373536
+    },
+    {
+      "id": "317",
+      "name": "Coryton Refinery (closed)",
+      "country": "79",
+      "method": "coastal fallback",
+      "distanceKm": 0.22331721866531373
+    },
+    {
+      "id": "325",
+      "name": "Whitegate Refinery, Cork",
+      "country": "78",
+      "method": "coastal fallback",
+      "distanceKm": 0.2449181444923037
+    },
+    {
+      "id": "350",
+      "name": "Petromidia Refinery, Năvodari",
+      "country": "74",
+      "method": "coastal fallback",
+      "distanceKm": 0.15879778991802904
+    },
+    {
+      "id": "464",
+      "name": "ENAP Gregorio Refinery / Magallanes",
+      "country": "3",
+      "method": "coastal fallback",
+      "distanceKm": 1.7727635138259719
+    },
+    {
+      "id": "496",
+      "name": "Petrojam Kingston Refinery",
+      "country": "214",
+      "method": "coastal fallback",
+      "distanceKm": 0.012069892444643411
+    },
+    {
+      "id": "497",
+      "name": "SARA Martinique Refinery, Fort-de-France",
+      "country": "22",
+      "method": "coastal fallback",
+      "distanceKm": 0.613417070546382
+    },
+    {
+      "id": "597",
+      "name": "Trainer Refinery",
+      "country": "155",
+      "method": "coastal fallback",
+      "distanceKm": 0.31465124371177683
+    },
+    {
+      "id": "634",
+      "name": "Marathon Anacortes Refinery",
+      "country": "155",
+      "method": "coastal fallback",
+      "distanceKm": 0.6879199721216513
+    },
+    {
+      "id": "644",
+      "name": "Burnaby Refinery",
+      "country": "156",
+      "method": "coastal fallback",
+      "distanceKm": 0.9228822427662687
+    },
+    {
+      "id": "647",
+      "name": "Dartmouth Refinery (closed)",
+      "country": "156",
+      "method": "coastal fallback",
+      "distanceKm": 0.26099860545791564
+    }
+  ],
+  "invalidCoordinates": [],
+  "duplicateCandidates": [
+    {
+      "id": "33",
+      "other": "32",
+      "reason": "same normalized official name; retained for review"
+    },
+    {
+      "id": "42",
+      "other": "40",
+      "reason": "same normalized official name; retained for review"
+    },
+    {
+      "id": "67",
+      "other": "66",
+      "reason": "same normalized official name; retained for review"
+    },
+    {
+      "id": "170",
+      "other": "165",
+      "reason": "same normalized official name; retained for review"
+    },
+    {
+      "id": "264",
+      "other": "260",
+      "reason": "same normalized official name; retained for review"
+    },
+    {
+      "id": "568",
+      "other": "567",
+      "reason": "same normalized official name; retained for review"
+    },
+    {
+      "id": "618",
+      "other": "613",
+      "reason": "same normalized official name; retained for review"
+    }
+  ],
+  "possibleSharedCapacity": [
+    {
+      "id": "40",
+      "other": "42",
+      "names": [
+        "Port Harcourt Refining Company – Port Harcourt Refineries (Old + New)",
+        "Port Harcourt Refining Company – Port Harcourt Refineries (Old + New)"
+      ],
+      "distanceKm": 8.279172663220024,
+      "capacity": 10457026,
+      "reason": "same owner and capacity within 150 km; may describe a shared complex total"
+    },
+    {
+      "id": "62",
+      "other": "63",
+      "names": [
+        "PetroChina Jilin Petrochemical Company",
+        "PetroChina Jilin Petrochemical Company (вторая площадка/запись исходной базы)"
+      ],
+      "distanceKm": 11.541393029437709,
+      "capacity": 9800000,
+      "reason": "same owner and capacity within 150 km; may describe a shared complex total"
+    },
+    {
+      "id": "66",
+      "other": "67",
+      "names": [
+        "PetroChina Liaoyang Petrochemical Company",
+        "PetroChina Liaoyang Petrochemical Company"
+      ],
+      "distanceKm": 1.6113959174588353,
+      "capacity": 10000000,
+      "reason": "same owner and capacity within 150 km; may describe a shared complex total"
+    },
+    {
+      "id": "197",
+      "other": "198",
+      "names": [
+        "Heydar Aliyev Oil Refinery, Baku",
+        "Heydar Aliyev Oil Refinery, Baku — duplicate/adjacent record"
+      ],
+      "distanceKm": 3.6576940334965027,
+      "capacity": 6500000,
+      "reason": "same owner and capacity within 150 km; may describe a shared complex total"
+    },
+    {
+      "id": "483",
+      "other": "484",
+      "names": [
+        "Paraguaná Refining Center — Amuay/associated record",
+        "Paraguaná Refining Center — Cardón/Judibana"
+      ],
+      "distanceKm": 198.4794698034869,
+      "capacity": 47554570,
+      "reason": "same named complex, owner and capacity; review shared total and coordinates"
+    }
+  ],
+  "missingCapacity": 288,
+  "missingOwner": 51,
+  "missingStatus": 106,
+  "missingAge": 527,
+  "statusConflicts": [
+    {
+      "id": "3",
+      "name": "Kwinana Refinery",
+      "status": "неизвестно",
+      "details": "Нефтепереработка прекращена; площадка преобразуется в энергетический хаб/импортный терминал"
+    },
+    {
+      "id": "7",
+      "name": "Clyde Refinery",
+      "status": "неизвестно",
+      "details": "Переработка прекращена 30.09.2012; Clyde/Gore Bay преобразованы в импортную инфраструктуру"
+    },
+    {
+      "id": "282",
+      "name": "Shell Energy and Chemicals Park Rheinland — Godorf/Wesseling",
+      "status": "действующий",
+      "details": "Действующий интегрированный парк; нефтепереработка сырой нефти продолжается в Godorf, но прекращена в Wesseling"
+    },
+    {
+      "id": "309",
+      "name": "Neste Porvoo Refinery",
+      "status": "действующий",
+      "details": "Действующий; Neste планирует постепенную трансформацию и прекращение crude refining к середине 2030-х"
+    },
+    {
+      "id": "327",
+      "name": "Grangemouth Refinery (closed)",
+      "status": "действующий",
+      "details": "Нефтепереработка прекращена; UK government учитывает 4 действующих refineries без Grangemouth"
+    },
+    {
+      "id": "397",
+      "name": "Lysychansk Refinery",
+      "status": "действующий",
+      "details": "Остановлен с 2012 г.; находится в зоне войны, действующая переработка не подтверждена"
+    },
+    {
+      "id": "522",
+      "name": "Rodeo Refinery / San Francisco Refinery (former crude refinery)",
+      "status": "перформативан",
+      "details": "Традиционная нефтепереработка прекращена; renewable complex"
+    }
+  ],
+  "unrecognizedStatuses": [
+    "перформативан"
+  ],
+  "priceRecords": 0
+}

@@ -1,0 +1,12 @@
+{
+  "fingerprint": "81575767740a95217c91a7b65f88e4f3e4d22f22ea7c027a598c7e6870ef73dd",
+  "sources": [
+    "country world.geojsonl",
+    "refinary world.geojsonl",
+    "country world.qmd",
+    "refinary world.qmd"
+  ],
+  "crs": "EPSG:4326",
+  "joinToleranceKm": 5,
+  "ambiguityMarginKm": 1
+}
