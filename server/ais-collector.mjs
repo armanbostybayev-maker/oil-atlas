@@ -377,8 +377,9 @@ const server = http.createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
+  const pathname = new URL(req.url, "http://localhost").pathname;
 
-  if (req.url === "/health") {
+  if (pathname === "/health") {
     const tankers = getTankers();
 
     res.writeHead(200);
@@ -392,7 +393,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.url === "/tankers") {
+  if (pathname === "/tankers") {
     const tankers = getTankers();
 
     res.writeHead(200);
@@ -418,6 +419,7 @@ server.listen(PORT, "0.0.0.0", () => {
 });
 
 connect();
+
 
 
 
