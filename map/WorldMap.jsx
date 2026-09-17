@@ -1,7 +1,8 @@
-import { t, useLanguage } from "../controls/i18n.jsx";
+﻿import { t, useLanguage } from "../controls/i18n.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { TankerLayer } from "./TankerLayer.mjs";
+import { createTankerCard } from "./TankerCard.mjs";
 import {
   Map,
   NavigationControl,
@@ -30,6 +31,7 @@ export default function WorldMap({
   onSelect,
   onReady,
   hoverOwner,
+  selectedRefinery = "",
   focus,
   onViewportChange,
   tankers = null,
@@ -123,8 +125,8 @@ export default function WorldMap({
         source: "countries",
         filter: ["==", ["get", "id"], ""],
         paint: {
-          "line-color": "#df9b42",
-          "line-width": 2.6,
+          "line-color": "#e32636",
+          "line-width": 3.2,
         },
       });
       // Label sprites are generated locally, so NAME_EN never depends on remote fonts.
@@ -191,17 +193,24 @@ export default function WorldMap({
             "#247e91",
           ],
           "circle-opacity": 0.8,
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 1,
+          "circle-stroke-color": [
+            "case",
+            ["==", ["get", "id"], selectedRefinery || ""],
+            "#e32636",
+            "#ffffff",
+          ],
+          "circle-stroke-width": [
+            "case",
+            ["==", ["get", "id"], selectedRefinery || ""],
+            4,
+            1,
+          ],
         },
       });
       tankerLayer.current = new TankerLayer(instance, { onSelect: (vessel, lngLat) => {
         tankerPopup.current?.remove();
-        const content = document.createElement("div");
-        for (const value of [vessel.name, `MMSI: ${vessel.mmsi}`, `IMO: ${vessel.imo || "—"}`, `${vessel.speed ?? "—"} kn · ${vessel.destination || "—"}`, vessel.timestamp]) {
-          const line = document.createElement("div"); line.textContent = value; content.append(line);
-        }
-        tankerPopup.current = new Popup().setLngLat(lngLat).setDOMContent(content).addTo(instance);
+        const content = createTankerCard(vessel);
+        tankerPopup.current = new Popup({ maxWidth: "420px", offset: 18 }).setLngLat(lngLat).setDOMContent(content).addTo(instance);
       }});
       setReady(true);
       onReady?.(instance);
@@ -238,56 +247,54 @@ export default function WorldMap({
     });
     instance.on("mousemove", (event) => {
       if (!instance.getLayer("refinery-circles")) return;
-      const f = instance.queryRenderedFeatures(event.point, {
-        layers: ["refinery-circles", "countries-fill"],
+
+      const refinery = instance.queryRenderedFeatures(event.point, {
+        layers: ["refinery-circles"],
       })[0];
-      instance.getCanvas().style.cursor = f ? "pointer" : "";
-      if (!f) {
+
+      const country = instance.queryRenderedFeatures(event.point, {
+        layers: ["countries-fill"],
+      })[0];
+
+      instance.getCanvas().style.cursor =
+        refinery || country ? "pointer" : "";
+
+      if (!refinery) {
         popup.remove();
         return;
       }
-      const { atlas, state, values, metric } = live.current;
-      let title, lines;
-      if (f.layer.id === "refinery-circles") {
-        const r = atlas.refineriesById.get(f.properties.id);
-        if (!r) return;
-        title = r.name;
-        lines = [
-          atlas.byId.get(r.country)?.name || t("Unmatched country"),
-          r.owner || t("Owner: No data"),
-          `${format(r.capacity === null ? null : r.capacity / 1e6)} Mt/year · capacity years vary`,
-          r.status,
-        ];
-      } else {
-        const c = atlas.byId.get(f.properties.id);
-        if (!c) return;
-        title = c.name;
-        const value = state.mode === "overview" ? c.capacity : values.get(c.id);
-        lines = [
-          `${metric.label}: ${typeof value === "string" ? value : format(value)} ${typeof value === "string" ? "" : metric.unit}`,
-          metricYear(c, state.metric),
-          `Capacity coverage: ${c.knownCapacity}/${c.count}`,
-          `Age coverage: ${c.knownAge}/${c.count}`,
-        ];
-        if (state.mode === "balance")
-          lines.push(
-            `Production ${format(c.production)} bbl/day (${c.years.production || "?"})`,
-            `Consumption ${format(c.consumption)} bbl/day (${c.years.consumption || "?"})`,
-            `Capacity ${format(c.capacity)} Mt/year (mixed years)`,
-            `P/C ${format(c.pcRatio)}× · R/C ${format(c.rcRatio)}×`,
-          );
+
+      const { atlas } = live.current;
+      const r = atlas.refineriesById.get(refinery.properties.id);
+
+      if (!r) {
+        popup.remove();
+        return;
       }
-      const content = document.createElement("div"),
-        heading = document.createElement("strong");
-      heading.textContent = title;
+
+      const lines = [
+        atlas.byId.get(r.country)?.name || t("Unmatched country"),
+        r.owner || t("Owner: No data"),
+        `${format(r.capacity === null ? null : r.capacity / 1e6)} Mt/year · capacity years vary`,
+        r.status,
+      ];
+
+      const content = document.createElement("div");
+      const heading = document.createElement("strong");
+
+      heading.textContent = r.name;
       content.append(heading);
-      for (const [index, line] of lines.entries()) {
+
+      for (const line of lines) {
         const div = document.createElement("div");
-        div.textContent =
-          f.layer.id === "refinery-circles" && index < 2 ? line : t(line);
+        div.textContent = line;
         content.append(div);
       }
-      popup.setLngLat(event.lngLat).setDOMContent(content).addTo(instance);
+
+      popup
+        .setLngLat(event.lngLat)
+        .setDOMContent(content)
+        .addTo(instance);
     });
     instance.on("mouseout", () => popup.remove());
     return () => {
@@ -346,6 +353,33 @@ export default function WorldMap({
       state.country || "",
     ]);
   }, [ready, atlas, values, scale, state.mode, state.country, state.basemap]);
+  useEffect(() => {
+    if (!ready) return;
+
+    const m = mapRef.current;
+
+    m.setPaintProperty(
+      "refinery-circles",
+      "circle-stroke-color",
+      [
+        "case",
+        ["==", ["get", "id"], selectedRefinery || ""],
+        "#e32636",
+        "#ffffff",
+      ],
+    );
+
+    m.setPaintProperty(
+      "refinery-circles",
+      "circle-stroke-width",
+      [
+        "case",
+        ["==", ["get", "id"], selectedRefinery || ""],
+        4,
+        1,
+      ],
+    );
+  }, [ready, selectedRefinery]);
   useEffect(() => {
     if (!ready) return;
     mapRef.current.getSource("refineries").setData(
@@ -478,3 +512,11 @@ export default function WorldMap({
     </>
   );
 }
+
+
+
+
+
+
+
+

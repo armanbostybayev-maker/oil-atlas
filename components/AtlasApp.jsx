@@ -227,6 +227,7 @@ export function createAtlasApp({
             type === "country" ? country(id) : refinery(id)
           }
           hoverOwner={hoverOwner}
+          selectedRefinery={selectedRefinery}
           focus={focus}
           onViewportChange={onViewportChange}
           tankers={tankers}
@@ -715,4 +716,5 @@ export function createAtlasApp({
     );
   };
 }
+
 

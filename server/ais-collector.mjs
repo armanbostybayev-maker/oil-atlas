@@ -7,47 +7,8 @@ const API_KEY = process.env.AISSTREAM_API_KEY;
 
 // Пока используем проверенный тестовый район Miami.
 const BOUNDS = [
-  // US Gulf + Caribbean
-  [[18.0, -98.0], [31.5, -75.0]],
-
-  // US / Canada Atlantic
-  [[31.0, -82.0], [50.0, -52.0]],
-
-  // Brazil + northern South America
-  [[-35.0, -60.0], [12.0, -34.0]],
-
-  // North Sea + English Channel
-  [[48.0, -8.0], [62.0, 14.0]],
-
-  // Mediterranean + Black Sea
-  [[30.0, -6.0], [47.5, 42.0]],
-
-  // West Africa
-  [[-35.0, -20.0], [30.0, 18.0]],
-
-  // Red Sea + Gulf of Aden
-  [[10.0, 30.0], [31.5, 52.0]],
-
-  // Persian Gulf + Gulf of Oman
-  [[20.0, 47.0], [31.0, 63.0]],
-
-  // India + Arabian Sea + Bay of Bengal
-  [[5.0, 60.0], [25.0, 95.0]],
-
-  // Malacca + Singapore + Indonesia
-  [[-12.0, 94.0], [15.0, 120.0]],
-
-  // South China Sea
-  [[0.0, 105.0], [25.0, 125.0]],
-
-  // China + Korea + Japan
-  [[20.0, 117.0], [46.0, 146.0]],
-
-  // Australia + New Zealand approaches
-  [[-48.0, 110.0], [-10.0, 180.0]],
-
-  // East Africa + Mozambique Channel
-  [[-35.0, 30.0], [12.0, 55.0]]
+  [[-90, -180], [90, 180]],
+  [[20, 47], [31, 63]]
 ];
 
 const vessels = new Map();
@@ -64,6 +25,60 @@ function cleanText(value) {
 function isTanker(type) {
   const n = Number(type);
   return Number.isFinite(n) && n >= 80 && n <= 89;
+}
+function tankerTypeName(type) {
+  const n = Number(type);
+
+  const names = {
+    80: "Tanker",
+    81: "Tanker - Hazard A",
+    82: "Tanker - Hazard B",
+    83: "Tanker - Hazard C",
+    84: "Tanker - Hazard D",
+    85: "Tanker",
+    86: "Tanker",
+    87: "Tanker",
+    88: "Tanker",
+    89: "Tanker"
+  };
+
+  return names[n] || "Tanker";
+}
+
+function navigationStatusName(status) {
+  const n = Number(status);
+
+  const names = {
+    0: "Underway using engine",
+    1: "At anchor",
+    2: "Not under command",
+    3: "Restricted manoeuvrability",
+    4: "Constrained by draught",
+    5: "Moored",
+    6: "Aground",
+    7: "Engaged in fishing",
+    8: "Underway sailing",
+    14: "AIS-SART / active",
+    15: "Not defined"
+  };
+
+  return names[n] || "Unknown";
+}
+
+function inferTankerSubtype(vessel) {
+  const searchable = [
+    vessel.name,
+    vessel.destination
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toUpperCase();
+
+  if (/\bFPSO\b|\bFSO\b/.test(searchable)) {
+    return "Floating Storage/Production";
+  }
+
+  return "Tanker";
 }
 
 function getMmsi(event, report) {
@@ -270,6 +285,14 @@ function updatePosition(event) {
     heading: Number.isFinite(Number(report.TrueHeading))
       ? Number(report.TrueHeading)
       : null,
+    navigationStatusCode:
+      Number.isFinite(Number(report.NavigationalStatus))
+        ? Number(report.NavigationalStatus)
+        : previous.navigationStatusCode ?? null,
+    navigationStatus:
+      Number.isFinite(Number(report.NavigationalStatus))
+        ? navigationStatusName(Number(report.NavigationalStatus))
+        : previous.navigationStatus || "",
     destination:
       info.destination ||
       previous.destination ||
@@ -307,6 +330,12 @@ function getTankers() {
 
   return [...vessels.values()]
     .filter(vessel => isTanker(vessel.vesselType))
+    .map(vessel => ({
+      ...vessel,
+      vesselTypeName: tankerTypeName(vessel.vesselType),
+      vesselSubtype: inferTankerSubtype(vessel),
+      status: vessel.navigationStatus || ""
+    }))
     .sort((a, b) =>
       String(a.name || a.mmsi).localeCompare(
         String(b.name || b.mmsi)
@@ -419,6 +448,12 @@ server.listen(PORT, "0.0.0.0", () => {
 });
 
 connect();
+
+
+
+
+
+
 
 
 
