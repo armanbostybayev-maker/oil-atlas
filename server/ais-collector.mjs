@@ -413,11 +413,12 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-server.listen(PORT, "127.0.0.1", () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`AIS collector listening on port ${PORT}`);
 });
 
 connect();
+
 
 
 
