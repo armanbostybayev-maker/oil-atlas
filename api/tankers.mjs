@@ -111,7 +111,7 @@ export default async function handler(req, res) {
     });
   };
 
-  const timer = setTimeout(finish, 15000);
+  const timer = setTimeout(finish, 60000);
 
   socket.on("open", () => {
     socket.send(JSON.stringify({
