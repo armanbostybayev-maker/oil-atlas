@@ -16,3 +16,5 @@ artifacts/
 # Data backups
 *.backup_*.json
 *.backup_before_*.json
+.vercel
+.env*
