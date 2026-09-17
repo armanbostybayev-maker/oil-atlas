@@ -2,9 +2,11 @@ import WebSocket from "ws";
 
 const AIS_URL = "wss://stream.aisstream.io/v0/stream";
 
-// Для первого теста берём весь мир.
-// Формат AISStream: [latitude, longitude].
-const WORLD = [[[-90, -180], [90, 180]]];
+// Район Персидского залива / Ормузского пролива.
+// Здесь обычно достаточно AIS-трафика для проверки.
+const BOUNDS = [
+  [[22.0, 48.0], [30.5, 58.5]]
+];
 
 function numberOrNull(value) {
   const n = Number(value);
@@ -13,6 +15,7 @@ function numberOrNull(value) {
 
 function normalizePosition(event) {
   const meta = event?.MetaData || {};
+
   const report =
     event?.Message?.PositionReport ||
     event?.Message?.StandardClassBPositionReport ||
@@ -20,8 +23,15 @@ function normalizePosition(event) {
 
   if (!report) return null;
 
-  const lat = numberOrNull(meta.Latitude);
-  const lon = numberOrNull(meta.Longitude);
+  // Координаты берём сначала непосредственно из AIS report.
+  // MetaData оставляем запасным вариантом.
+  const lat = numberOrNull(
+    report.Latitude ?? meta.Latitude ?? meta.latitude
+  );
+
+  const lon = numberOrNull(
+    report.Longitude ?? meta.Longitude ?? meta.longitude
+  );
 
   if (
     lat === null ||
@@ -32,10 +42,18 @@ function normalizePosition(event) {
     return null;
   }
 
+  const mmsi = String(
+    meta.MMSI ??
+    report.UserID ??
+    ""
+  );
+
+  if (!mmsi) return null;
+
   return {
-    mmsi: String(meta.MMSI ?? ""),
+    mmsi,
     imo: null,
-    name: String(meta.ShipName || "").trim() || "Unknown vessel",
+    name: String(meta.ShipName || "").trim() || `MMSI ${mmsi}`,
     vesselType: "AIS",
     lat,
     lon,
@@ -52,69 +70,104 @@ export default async function handler(req, res) {
 
   if (!apiKey) {
     return res.status(500).json({
-      error: "AISSTREAM_API_KEY is not configured",
+      error: "AISSTREAM_API_KEY is not configured"
     });
   }
 
   const vessels = new Map();
 
-  try {
-    const socket = new WebSocket(AIS_URL);
+  let confirmation = false;
+  let receivedMessages = 0;
+  let lastMessageType = null;
+  let streamError = null;
+  let finished = false;
 
-    const finish = () => {
-      try {
-        socket.close();
-      } catch {}
+  const socket = new WebSocket(AIS_URL, {
+    perMessageDeflate: true
+  });
 
-      res.setHeader("Cache-Control", "no-store");
-      res.status(200).json({
-        vessels: [...vessels.values()],
-        count: vessels.size,
-        generatedAt: new Date().toISOString(),
-      });
-    };
+  const finish = () => {
+    if (finished) return;
+    finished = true;
 
-    const timer = setTimeout(finish, 8000);
+    try {
+      socket.close();
+    } catch {}
 
-    socket.on("open", () => {
-      socket.send(
-        JSON.stringify({
-          APIKey: apiKey,
-          BoundingBoxes: WORLD,
-          FilterMessageTypes: [
-            "PositionReport",
-            "StandardClassBPositionReport",
-            "ExtendedClassBPositionReport",
-          ],
-        }),
-      );
+    res.setHeader("Cache-Control", "no-store");
+
+    return res.status(200).json({
+      vessels: [...vessels.values()],
+      count: vessels.size,
+
+      debug: {
+        subscriptionConfirmed: confirmation,
+        receivedMessages,
+        lastMessageType,
+        streamError
+      },
+
+      generatedAt: new Date().toISOString()
     });
+  };
 
-    socket.on("message", raw => {
-      try {
-        const event = JSON.parse(raw.toString());
+  const timer = setTimeout(finish, 15000);
 
-        const vessel = normalizePosition(event);
+  socket.on("open", () => {
+    socket.send(JSON.stringify({
+      APIKey: apiKey,
+      BoundingBoxes: BOUNDS,
+      FilterMessageTypes: [
+        "PositionReport",
+        "StandardClassBPositionReport",
+        "ExtendedClassBPositionReport"
+      ]
+    }));
+  });
 
-        if (!vessel?.mmsi) return;
+  socket.on("message", raw => {
+    try {
+      const event = JSON.parse(raw.toString());
 
-        vessels.set(vessel.mmsi, vessel);
-      } catch {}
-    });
+      receivedMessages++;
 
-    socket.on("error", error => {
-      clearTimeout(timer);
-
-      if (!res.headersSent) {
-        res.status(502).json({
-          error: "AISStream connection failed",
-          detail: error.message,
-        });
+      if (event?.error) {
+        streamError = String(event.error);
+        clearTimeout(timer);
+        return finish();
       }
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
-  }
+
+      lastMessageType = event?.MessageType || null;
+
+      if (event?.MessageType === "SubscriptionConfirmation") {
+        confirmation = true;
+        return;
+      }
+
+      const vessel = normalizePosition(event);
+
+      if (vessel) {
+        vessels.set(vessel.mmsi, vessel);
+      }
+    } catch (error) {
+      streamError = `Parse error: ${error.message}`;
+    }
+  });
+
+  socket.on("error", error => {
+    streamError = error.message;
+    clearTimeout(timer);
+    finish();
+  });
+
+  socket.on("close", (code, reason) => {
+    if (!finished && code !== 1000) {
+      streamError =
+        streamError ||
+        `WebSocket closed: ${code} ${reason.toString()}`;
+
+      clearTimeout(timer);
+      finish();
+    }
+  });
 }
