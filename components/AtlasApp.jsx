@@ -1,4 +1,4 @@
-import { t, useLanguage } from "../controls/i18n.jsx";
+﻿import { t, useLanguage } from "../controls/i18n.jsx";
 import React, {
   useEffect,
   useMemo,
@@ -18,6 +18,7 @@ import {
 } from "../analytics/atlas.mjs";
 import { MODES, CLASSES, ANOMALIES } from "../analytics/config.mjs";
 import { colorScale } from "../map/layers.mjs";
+import { loadTankers } from "../map/TankerLayer.mjs";
 import { readState, writeState } from "../controls/state.mjs";
 import { finite, format } from "../utils/numbers.mjs";
 export function createAtlasApp({
@@ -34,6 +35,31 @@ export function createAtlasApp({
     const onViewportChange = useCallback(viewport => { mapViewport.current = viewport; }, []);
     const [help, setHelp] = useState(null);
     const closeHelp = useCallback(() => setHelp(null), []);
+    const [tankers, setTankers] = useState([]);
+    const [tankersEnabled, setTankersEnabled] = useState(true);
+    useEffect(() => {
+      const controller = new AbortController();
+
+      async function refreshTankers() {
+        try {
+          const vessels = await loadTankers({ signal: controller.signal });
+          setTankers(vessels);
+          console.log(`AIS: ${vessels.length} vessels`);
+        } catch (error) {
+          if (error.name !== "AbortError") {
+            console.error("AIS load failed:", error);
+          }
+        }
+      }
+
+      refreshTankers();
+      const timer = setInterval(refreshTankers, 10000);
+
+      return () => {
+        controller.abort();
+        clearInterval(timer);
+      };
+    }, []);
     const atlas = useMemo(
       () => ({
         ...createAnalytics(data),
@@ -203,6 +229,8 @@ export function createAtlasApp({
           hoverOwner={hoverOwner}
           focus={focus}
           onViewportChange={onViewportChange}
+          tankers={tankers}
+          tankersEnabled={tankersEnabled}
         />
 
         <MapOverlayLayout
@@ -273,7 +301,7 @@ export function createAtlasApp({
                         title={`${t("About analysis")}: ${t(m.label)}`}
                         onClick={() => setHelp(id)}
                       >
-                        ⓘ
+                        в“
                       </button>
                     </div>
                   )),
@@ -338,7 +366,7 @@ export function createAtlasApp({
           <p>
             {t(
               state.mode === "overview"
-                ? "The world’s refining landscape"
+                ? "The worldвЂ™s refining landscape"
                 : metric.label,
             )}
             {t(" ")}
@@ -433,7 +461,7 @@ export function createAtlasApp({
               </label>
             ),
           )}
-          <button className="close-analysis" onClick={() => update({ mode: "none", metric: "capacity" })}>{t("Close analysis")} ×</button>
+          <button className="close-analysis" onClick={() => update({ mode: "none", metric: "capacity" })}>{t("Close analysis")} Г—</button>
           <button className="reset" onClick={reset}>
             {t("\u21BA Reset View")}
           </button>
@@ -590,7 +618,7 @@ export function createAtlasApp({
                   {t(" ")}
                   {t(
                     state.mode === "prices"
-                      ? "· No verified fuel prices in source"
+                      ? "В· No verified fuel prices in source"
                       : "",
                   )}
                 </small>
@@ -605,12 +633,12 @@ export function createAtlasApp({
               </>
             ),
           )}
-          {analysisMode === "age" && <small>{t("Young → old refineries")}</small>}
-          {analysisMode === "capacity" && <small>{t("Lower → higher capacity")}</small>}
+          {analysisMode === "age" && <small>{t("Young в†’ old refineries")}</small>}
+          {analysisMode === "capacity" && <small>{t("Lower в†’ higher capacity")}</small>}
           <small className="year-note">
             {t(
               state.mode === "overview"
-                ? "Inventory status: 2026 · capacity years vary"
+                ? "Inventory status: 2026 В· capacity years vary"
                 : metric.year === "production" ||
                     metric.year === "consumption" ||
                     ["crude", "ngpl", "gdp", "growth", "inflation"].includes(
@@ -681,9 +709,10 @@ export function createAtlasApp({
           </small>
         </div>
 </>}
-          reset={<button className="panel reset-map" onClick={reset} aria-label={t("Reset View")}>↺</button>}
+          reset={<button className="panel reset-map" onClick={reset} aria-label={t("Reset View")}>в†є</button>}
         />
       </main>
     );
   };
 }
+
