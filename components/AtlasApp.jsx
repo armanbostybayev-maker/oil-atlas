@@ -19,6 +19,12 @@ import {
 import { MODES, CLASSES, ANOMALIES } from "../analytics/config.mjs";
 import { colorScale } from "../map/layers.mjs";
 import { loadTankers } from "../map/TankerLayer.mjs";
+import VesselTypes from "../panels/VesselTypes.jsx";
+import {
+  ALL_VESSEL_TYPES,
+  normalizeFleet,
+  vesselTypeCounts,
+} from "../map/vessel-types.mjs";
 import { readState, writeState } from "../controls/state.mjs";
 import { finite, format } from "../utils/numbers.mjs";
 export function createAtlasApp({
@@ -37,6 +43,18 @@ export function createAtlasApp({
     const closeHelp = useCallback(() => setHelp(null), []);
     const [tankers, setTankers] = useState([]);
     const [tankersEnabled, setTankersEnabled] = useState(true);
+    const [selectedVesselTypes, setSelectedVesselTypes] =
+      useState(ALL_VESSEL_TYPES);
+
+    const fleet = useMemo(
+      () => normalizeFleet(tankers),
+      [tankers]
+    );
+
+    const vesselCounts = useMemo(
+      () => vesselTypeCounts(fleet),
+      [fleet]
+    );
     useEffect(() => {
       const controller = new AbortController();
 
@@ -53,7 +71,7 @@ export function createAtlasApp({
       }
 
       refreshTankers();
-      const timer = setInterval(refreshTankers, 10000);
+      const timer = setInterval(refreshTankers, 65000);
 
       return () => {
         controller.abort();
@@ -212,6 +230,29 @@ export function createAtlasApp({
     const priceUnits = [
       ...new Set(atlas.stats.map((c) => c.priceUnit).filter(Boolean)),
     ];
+    const selectTanker = useCallback((vessel) => {
+      const lat = Number(vessel.lat);
+      const lon = Number(vessel.lon);
+
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+      setTankersEnabled(true);
+
+      if (
+        vessel.vesselTypeId &&
+        !selectedVesselTypes.includes(vessel.vesselTypeId)
+      ) {
+        setSelectedVesselTypes((current) => [
+          ...new Set([...current, vessel.vesselTypeId]),
+        ]);
+      }
+
+      setFocus({
+        points: [[lon, lat]],
+        zoom: 8,
+      });
+    }, [selectedVesselTypes]);
+
     return (
       <main className="atlas-app" data-active-analysis={activeAnalysis || "none"}>
         {help && <ModeHelp mode={help} onClose={closeHelp} />}
@@ -227,11 +268,11 @@ export function createAtlasApp({
             type === "country" ? country(id) : refinery(id)
           }
           hoverOwner={hoverOwner}
-          selectedRefinery={selectedRefinery}
           focus={focus}
           onViewportChange={onViewportChange}
-          tankers={tankers}
+          tankers={fleet}
           tankersEnabled={tankersEnabled}
+          selectedVesselTypes={selectedVesselTypes}
         />
 
         <MapOverlayLayout
@@ -266,6 +307,16 @@ export function createAtlasApp({
           onSelect={owner}
           onHover={setHoverOwner}
         />
+            <VesselTypes
+              selected={selectedVesselTypes}
+              onChange={setSelectedVesselTypes}
+              counts={vesselCounts}
+              total={fleet.length}
+              enabled={tankersEnabled}
+              onEnabledChange={setTankersEnabled}
+              vessels={fleet}
+              onVesselSelect={selectTanker}
+            />
 </>}
           workspace={<>
             {menu ? <>        {t(
@@ -302,7 +353,7 @@ export function createAtlasApp({
                         title={`${t("About analysis")}: ${t(m.label)}`}
                         onClick={() => setHelp(id)}
                       >
-                        в“
+                        ⓘ
                       </button>
                     </div>
                   )),
@@ -367,7 +418,7 @@ export function createAtlasApp({
           <p>
             {t(
               state.mode === "overview"
-                ? "The worldвЂ™s refining landscape"
+                ? "The world’s refining landscape"
                 : metric.label,
             )}
             {t(" ")}
@@ -462,7 +513,7 @@ export function createAtlasApp({
               </label>
             ),
           )}
-          <button className="close-analysis" onClick={() => update({ mode: "none", metric: "capacity" })}>{t("Close analysis")} Г—</button>
+          <button className="close-analysis" onClick={() => update({ mode: "none", metric: "capacity" })}>{t("Close analysis")} ×</button>
           <button className="reset" onClick={reset}>
             {t("\u21BA Reset View")}
           </button>
@@ -619,7 +670,7 @@ export function createAtlasApp({
                   {t(" ")}
                   {t(
                     state.mode === "prices"
-                      ? "В· No verified fuel prices in source"
+                      ? "· No verified fuel prices in source"
                       : "",
                   )}
                 </small>
@@ -634,12 +685,12 @@ export function createAtlasApp({
               </>
             ),
           )}
-          {analysisMode === "age" && <small>{t("Young в†’ old refineries")}</small>}
-          {analysisMode === "capacity" && <small>{t("Lower в†’ higher capacity")}</small>}
+          {analysisMode === "age" && <small>{t("Young → old refineries")}</small>}
+          {analysisMode === "capacity" && <small>{t("Lower → higher capacity")}</small>}
           <small className="year-note">
             {t(
               state.mode === "overview"
-                ? "Inventory status: 2026 В· capacity years vary"
+                ? "Inventory status: 2026 · capacity years vary"
                 : metric.year === "production" ||
                     metric.year === "consumption" ||
                     ["crude", "ngpl", "gdp", "growth", "inflation"].includes(
@@ -710,11 +761,10 @@ export function createAtlasApp({
           </small>
         </div>
 </>}
-          reset={<button className="panel reset-map" onClick={reset} aria-label={t("Reset View")}>в†є</button>}
+          reset={<button className="panel reset-map" onClick={reset} aria-label={t("Reset View")}>↺</button>}
         />
       </main>
     );
   };
 }
-
 

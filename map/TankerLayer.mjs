@@ -14,6 +14,8 @@
  * @property {Array<{lat:number,lon:number,timestamp:string}>} [history]
  */
 
+import { ALL_VESSEL_TYPES, vesselMapFilter, vesselCompanyKey } from './vessel-types.mjs';
+import { parseAisTimestamp } from './ais-time.mjs';
 const collection = features => ({
   type: "FeatureCollection",
   features
@@ -77,6 +79,7 @@ export function tankerFeatures(vessels) {
       properties: {
         ...vessel,
         history: undefined,
+        companyKey: vesselCompanyKey(vessel),
         direction,
         icon:
           Number(vessel.speed) > 0.5
@@ -89,12 +92,12 @@ export function tankerFeatures(vessels) {
       .filter(
         p =>
           coordinate(p) &&
-          Number.isFinite(Date.parse(p.timestamp))
+          parseAisTimestamp(p.timestamp) !== null
       )
       .sort(
         (a, b) =>
-          Date.parse(a.timestamp) -
-          Date.parse(b.timestamp)
+          parseAisTimestamp(a.timestamp) -
+          parseAisTimestamp(b.timestamp)
       );
 
     let segment = [];
@@ -105,7 +108,9 @@ export function tankerFeatures(vessels) {
         routes.push({
           type: "Feature",
           properties: {
-            mmsi: vessel.mmsi
+            mmsi: vessel.mmsi,
+            vesselTypeId:vessel.vesselTypeId,
+            companyKey:vesselCompanyKey(vessel),
           },
           geometry: {
             type: "LineString",
@@ -120,10 +125,10 @@ export function tankerFeatures(vessels) {
     for (const p of history) {
       if (previousPoint) {
         const previousTime =
-          Date.parse(previousPoint.timestamp);
+          parseAisTimestamp(previousPoint.timestamp);
 
         const currentTime =
-          Date.parse(p.timestamp);
+          parseAisTimestamp(p.timestamp);
 
         const hours =
           (currentTime - previousTime) / 3600000;
@@ -166,7 +171,7 @@ export function tankerFeatures(vessels) {
 // Only an application-owned backend URL is accepted.
 // Provider credentials, authentication and retention
 // stay on the server.
-export async function loadTankers({
+export async function loadTankerSnapshot({
   endpoint = "/api/tankers",
   signal
 } = {}) {
@@ -197,7 +202,12 @@ export async function loadTankers({
     );
   }
 
-  return data.vessels;
+  return data;
+}
+
+// Preserve the original public helper for integrations expecting an array.
+export async function loadTankers(options) {
+  return (await loadTankerSnapshot(options)).vessels;
 }
 
 export class TankerLayer {
@@ -337,6 +347,11 @@ export class TankerLayer {
         visible ? "visible" : "none"
       );
     }
+  }
+
+  setFilter(selected = ALL_VESSEL_TYPES, company = '') {
+    const filter = vesselMapFilter(selected,company);
+    for (const id of ['tankers','tanker-history']) this.map.setFilter(id,filter);
   }
 
   destroy() {

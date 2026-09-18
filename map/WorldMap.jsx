@@ -36,6 +36,7 @@ export default function WorldMap({
   onViewportChange,
   tankers = null,
   tankersEnabled = false,
+  selectedVesselTypes,
 }) {
   const language = useLanguage();
   const element = useRef(null),
@@ -209,7 +210,7 @@ export default function WorldMap({
       });
       tankerLayer.current = new TankerLayer(instance, { onSelect: (vessel, lngLat) => {
         tankerPopup.current?.remove();
-        const content = createTankerCard(vessel);
+        const content = createTankerCard(vessel, t);
         tankerPopup.current = new Popup({ maxWidth: "420px", offset: 18 }).setLngLat(lngLat).setDOMContent(content).addTo(instance);
       }});
       setReady(true);
@@ -311,6 +312,11 @@ export default function WorldMap({
     tankerLayer.current.setVisible(tankersEnabled);
     if (!tankersEnabled) tankerPopup.current?.remove();
   }, [ready, tankers, tankersEnabled]);
+  useEffect(() => {
+    if (!ready || !tankerLayer.current) return;
+    tankerLayer.current.setFilter(selectedVesselTypes, state.owner);
+    tankerPopup.current?.remove();
+  }, [ready, selectedVesselTypes, state.owner]);
   useEffect(() => {
     if (!ready) return;
     const container = mapRef.current.getContainer();
