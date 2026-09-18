@@ -46,10 +46,19 @@
 .map-overlay-layout .search > input { flex: 1; width: 0; }
 .map-overlay-layout .search-results { position: static; width: 100%; max-height: min(300px, 35dvh); margin-top: 8px; box-shadow: none; padding: 4px; }
 .map-overlay-layout .language-switcher { align-self: end; padding: 8px 14px; min-height: 50px; flex-shrink: 0; }
-.map-overlay-layout .owners-picker { display: flex; flex-direction: column; min-height: 0; pointer-events: auto; }
+.map-overlay-layout .owners-picker { display: flex; flex-direction: column; min-height: 0; max-height: 42dvh; flex-shrink: 0; pointer-events: auto; }
 .map-overlay-layout .owners-trigger { flex-shrink: 0; padding: 12px 16px; font-size: 16px; }
 .map-overlay-layout .owners-dropdown { margin-top: 12px; padding: var(--overlay-padding); min-height: 0; max-height: none; overflow-y: auto; }
 .map-overlay-layout .owners-dropdown > * { flex-shrink: 0; }
+.map-overlay-layout .vessel-types { display: flex; flex-direction: column; flex: 0 1 auto; min-height: 42px; max-height: min(65dvh, 650px); overflow: hidden; pointer-events: auto; }
+.vessel-types-trigger { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 16px; gap: 8px; flex-shrink: 0; text-align: left; font-size: 15px; font-weight: 600; }
+.vessel-type-options { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 12px 12px; scrollbar-width: thin; }
+.vessel-type-options label { display: grid; grid-template-columns: 16px minmax(0,1fr) auto; align-items: center; gap: 8px; padding: 7px 0; font-size: 12px; line-height: 1.4; cursor: pointer; }
+.vessel-type-options input { accent-color: #247e91; margin: 0; width: 16px; height: 16px; min-height: 16px; }
+.vessel-type-options .vessel-type-all { font-weight: 600; border-bottom: 1px solid var(--line); }
+.vessel-type-children { padding-left: 10px; }
+.vessel-type-count { font-variant-numeric: tabular-nums; color: #627a84; }
+.vessel-type-options small { display: block; margin-top: 8px; font-size: 11px; line-height: 1.4; color: #627a84; }
 .map-overlay-layout .owner-results { flex: 1 1 auto; min-height: 70px; }
 .map-overlay-layout .owner-results .owner-name { flex: 1; min-width: 0; }
 .map-overlay-layout :is(.analytics-menu,.details,.comparison) { padding: var(--overlay-padding); max-height: none; overflow: visible; }
@@ -73,6 +82,10 @@
 .map-overlay-layout .legend small { font-size: 12px; }
 .map-overlay-layout .class-legend { grid-template-columns: 1fr 1fr; font-size: 12px; gap: 8px; }
 .map-overlay-layout .bottom-tools { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 8px; }
+.map-overlay-layout .ais-status { grid-column: 1 / -1; padding: 6px 10px; font-size: 12px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.map-overlay-layout .ais-status small { font-size: 11px; }
+.map-overlay-layout .ais-status[data-status="stale"],
+.map-overlay-layout .ais-status[data-status="offline"] { color: #8c491b; }
 .map-overlay-layout .data-button { padding: 8px 12px; font-size: 13px; }
 .map-overlay-layout .basemap-label { display: flex; flex-direction: column; align-items: stretch; padding: 8px 12px; gap: 2px; }
 .map-overlay-layout .basemap-label > span { font-size: 10px; }
@@ -115,11 +128,14 @@
   .map-overlay-layout .search-results { max-height: 160px; }
   .overlay-right { grid-area: 1/1/2/3; justify-self: end; width: 136px; gap: 6px; z-index: var(--z-dropdown); }
   .map-overlay-layout .language-switcher { min-height: 44px; padding: 4px 8px; }
-  .map-overlay-layout .owners-picker { position: relative; }
+  .map-overlay-layout .owners-picker { position: relative; z-index: 2; }
   .map-overlay-layout .owners-trigger { font-size: 12px; padding: 5px 8px; min-height: 34px; }
   .map-overlay-layout .owners-trigger small { display: none; }
   .map-overlay-layout .owners-dropdown { position: absolute; top: 100%; right: 0; width: min(340px,calc(100vw - 16px)); max-height: 48dvh; margin-top: 6px; }
-  .overlay-brand { min-height: 90px; }
+  .overlay-brand { min-height: 130px; }
+  .map-overlay-layout .vessel-types { position: relative; overflow: visible; flex-shrink: 0; min-height: 34px; }
+  .vessel-types-trigger { padding: 7px 8px; font-size: 12px; min-height: 34px; }
+  .vessel-type-options { position: absolute; top: calc(100% + 6px); right: 0; width: min(340px,calc(100vw - 16px)); max-height: 52dvh; padding: 8px 12px; background: #fff; border: 1px solid var(--line); border-radius: var(--overlay-radius); box-shadow: var(--overlay-shadow); pointer-events: auto; }
   .overlay-workspace { grid-area: 3/1; max-height: 100%; }
   .overlay-bottom-left { grid-area: 4/1; gap: 6px; }
   .overlay-summary { grid-area: 5/1/6/3; width: 100%; }
