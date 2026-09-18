@@ -1,10 +1,10 @@
 {
-  "fingerprint": "81575767740a95217c91a7b65f88e4f3e4d22f22ea7c027a598c7e6870ef73dd",
+  "version": 2,
+  "fingerprint": "75c4341c2ee6bb96ce95e4347727f862fcd0b1ef5842ac96b05b03f77627e59e",
   "sources": [
-    "country world.geojsonl",
-    "refinary world.geojsonl",
-    "country world.qmd",
-    "refinary world.qmd"
+    "data/sources/base.json",
+    "data/sources/countries.geojson",
+    "data/sources/enrichment.json"
   ],
   "crs": "EPSG:4326",
   "joinToleranceKm": 5,
