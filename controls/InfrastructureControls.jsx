@@ -3,9 +3,10 @@ import { t } from "./i18n.jsx";
 import { INFRASTRUCTURE_TYPES } from "../map/InfrastructureLayer.mjs";
 import "../styles/infrastructure.css";
 
-export default function InfrastructureControls({ visibility, onChange, counts, error }) {
+export default function InfrastructureControls({ visibility, onChange, counts, error, onAnalytics }) {
   return <section className="panel infrastructure-controls" aria-label={t("Infrastructure layers")}>
     <header><strong>{t("Oil & gas infrastructure")}</strong></header>
+    <button type="button" onClick={onAnalytics}>Аналитика трубопроводов</button>
     <p>{t("Public route and facility data; geographic coverage varies.")}</p>
     <div className="infrastructure-options">
       {INFRASTRUCTURE_TYPES.map(item => <label key={item.id}>

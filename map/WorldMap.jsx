@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { TankerLayer } from "./TankerLayer.mjs";
 import { InfrastructureLayer, createInfrastructureCard } from "./InfrastructureLayer.mjs";
+import { PipelineAnalyticsLayer } from './PipelineAnalyticsLayer.mjs';
 import { createTankerCard } from "./TankerCard.mjs";
 import {
   Map,
@@ -41,8 +42,11 @@ export default function WorldMap({
   infrastructureVisibility = {},
   onInfrastructureCounts,
   onInfrastructureError,
+  pipelineModel,
+  pipelinesOpen=false,
 }) {
   const language = useLanguage();
+  const pipelineLayer=useRef(null);
   const element = useRef(null),
     mapRef = useRef(null),
     live = useRef({}),
@@ -53,6 +57,7 @@ export default function WorldMap({
     [ready, setReady] = useState(false),
     [notice, setNotice] = useState("");
   live.current = {
+    pipelineModel,
     atlas,
     state,
     values,
@@ -221,6 +226,7 @@ export default function WorldMap({
         const content = createTankerCard(vessel, t);
         tankerPopup.current = new Popup({ maxWidth: "420px", offset: 18 }).setLngLat(lngLat).setDOMContent(content).addTo(instance);
       }});
+      pipelineLayer.current = new PipelineAnalyticsLayer(instance,id=>live.current.pipelineModel?.select(id));
       infrastructureLayer.current = new InfrastructureLayer(instance, {
         onSelect: (feature, lngLat, type) => {
           infrastructurePopup.current?.remove();
@@ -238,6 +244,7 @@ export default function WorldMap({
     instance.on("click", (event) => {
       if (!instance.getLayer("countries-fill")) return;
       if (instance.getLayer("tankers") && instance.queryRenderedFeatures(event.point, { layers: ["tankers"] }).length) return;
+      if(pipelineLayer.current?.hit(event.point))return;
       const infrastructureLayers = ["oil", "gas", "fields", "processing", "stations", "storage"].map(type => `infrastructure-${type}-layer`).filter(id => instance.getLayer(id) && instance.getLayoutProperty(id, "visibility") === "visible");
       if (infrastructureLayers.length && instance.queryRenderedFeatures(event.point, { layers: infrastructureLayers }).length) return;
       const found = instance.queryRenderedFeatures(event.point, {
@@ -319,6 +326,7 @@ export default function WorldMap({
     });
     instance.on("mouseout", () => popup.remove());
     return () => {
+      pipelineLayer.current?.destroy();pipelineLayer.current=null;
       tankerPopup.current?.remove();
       infrastructurePopup.current?.remove();
       infrastructureLayer.current?.destroy();
@@ -329,6 +337,9 @@ export default function WorldMap({
       instance.remove();
     };
   }, [geometry, atlas]);
+  useEffect(()=>{if(ready&&pipelineModel)pipelineLayer.current?.setData(pipelineModel.records);},[ready,pipelineModel?.records]);
+  useEffect(()=>{if(ready&&pipelineModel)pipelineLayer.current?.update({enabled:pipelinesOpen,filtered:pipelineModel.filtered,selected:pipelineModel.selected,color:pipelineModel.color,unit:pipelineModel.filters.unit,group:pipelineModel.filters.group});},[ready,pipelinesOpen,pipelineModel?.filtered,pipelineModel?.selected,pipelineModel?.color,pipelineModel?.filters.unit,pipelineModel?.filters.group]);
+  useEffect(()=>{if(ready&&pipelinesOpen&&pipelineModel?.selected)pipelineLayer.current?.focus(pipelineModel.selected);},[ready,pipelinesOpen,pipelineModel?.selected]);
   useEffect(() => {
     if (!ready || !infrastructureLayer.current) return;
     for (const [type, enabled] of Object.entries(infrastructureVisibility)) {

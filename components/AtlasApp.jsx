@@ -21,6 +21,8 @@ import { colorScale } from "../map/layers.mjs";
 import { loadTankers } from "../map/TankerLayer.mjs";
 import VesselTypes from "../panels/VesselTypes.jsx";
 import InfrastructureControls from "../controls/InfrastructureControls.jsx";
+import usePipelines from '../controls/usePipelines.jsx';
+import PipelineAnalytics from '../panels/PipelineAnalytics.jsx';
 import { defaultInfrastructureVisibility } from "../map/InfrastructureLayer.mjs";
 import {
   ALL_VESSEL_TYPES,
@@ -46,6 +48,8 @@ export function createAtlasApp({
     const [infrastructureVisibility, setInfrastructureVisibility] = useState(defaultInfrastructureVisibility);
     const [infrastructureCounts, setInfrastructureCounts] = useState({});
     const [infrastructureError, setInfrastructureError] = useState("");
+    const [pipelinesOpen,setPipelinesOpen] = useState(false);
+    const pipelines=usePipelines(pipelinesOpen);
     const [tankers, setTankers] = useState([]);
     const [tankersEnabled, setTankersEnabled] = useState(true);
     const [selectedVesselTypes, setSelectedVesselTypes] =
@@ -278,7 +282,9 @@ export function createAtlasApp({
           tankers={fleet}
           tankersEnabled={tankersEnabled}
           selectedVesselTypes={selectedVesselTypes}
-          infrastructureVisibility={infrastructureVisibility}
+          infrastructureVisibility={pipelinesOpen?{...infrastructureVisibility,oil:false,gas:false}:infrastructureVisibility}
+          pipelineModel={pipelines}
+          pipelinesOpen={pipelinesOpen}
           onInfrastructureCounts={setInfrastructureCounts}
           onInfrastructureError={setInfrastructureError}
         />
@@ -316,6 +322,7 @@ export function createAtlasApp({
           onHover={setHoverOwner}
         />
             <InfrastructureControls
+              onAnalytics={()=>{setPipelinesOpen(true);setMenu(false);}}
               visibility={infrastructureVisibility}
               onChange={(type, enabled) => {
                 setInfrastructureError("");
@@ -336,7 +343,7 @@ export function createAtlasApp({
             />
 </>}
           workspace={<>
-            {menu ? <>        {t(
+            {pipelinesOpen ? <PipelineAnalytics model={pipelines} onClose={()=>setPipelinesOpen(false)} /> : menu ? <>        {t(
           menu && (
             <aside
               className="panel analytics-menu"
