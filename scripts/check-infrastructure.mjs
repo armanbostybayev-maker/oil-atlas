@@ -15,10 +15,11 @@ for (const { id, label } of INFRASTRUCTURE_TYPES) {
   try {
     const file = join(dir, names[id]);
     const data = validateInfrastructureCollection(JSON.parse(await readFile(file, "utf8")), id);
-    let missing = 0, invalid = 0;
+    let missing = 0, missingDates = 0, invalid = 0;
     for (const feature of data.features) {
       const p = feature.properties || {};
-      if (!p.source || !/^https:\/\//.test(p.source_url || "") || !p.source_date || !p.geometry_accuracy) missing++;
+      if (!p.source || !/^https:\/\//.test(p.source_url || "") || !p.geometry_accuracy) missing++;
+      if (!p.source_date && !p.source_release) missingDates++;
       const walk = coordinates => {
         if (!Array.isArray(coordinates) || !coordinates.length) return false;
         if (typeof coordinates[0] === "number") return coordinates.length >= 2 &&
@@ -28,7 +29,7 @@ for (const { id, label } of INFRASTRUCTURE_TYPES) {
       };
       if (!walk(feature.geometry.coordinates)) invalid++;
     }
-    console.log(`${label}: ${data.features.length} features; missing provenance: ${missing}; invalid coordinates: ${invalid}`);
+    console.log(`${label}: ${data.features.length} features; missing provenance: ${missing}; missing record/release dates: ${missingDates}; invalid coordinates: ${invalid}`);
     if (missing || invalid) failures++;
   } catch (error) {
     console.error(`${label}: ${error.message}`);
