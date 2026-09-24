@@ -96,3 +96,15 @@ test("publication gate requires approval evidence and exact feature count", () =
   assert.deepEqual(publicationIssues(manifest, [{ type: "gas", features: 2 }]), []);
   assert.ok(publicationIssues(manifest, [{ type: "gas", features: 3 }]).some(issue => issue.includes("count")));
 });
+
+import { tilePublicationIssues } from "../scripts/infrastructure-publication-gate.mjs";
+test("tile publication requires explicit dataset approval", () => {
+  const env = { VITE_GAS_PIPELINE_TILES: "https://example.org/{z}/{x}/{y}.pbf" };
+  assert.deepEqual(tilePublicationIssues({ status: "prepared_not_published", datasets: [] }, {}), []);
+  assert.ok(tilePublicationIssues({ status: "prepared_not_published", datasets: [] }, env).length > 0);
+  const approved = { status: "approved_for_publication", datasets: [{
+    type: "gas", source_release: "verified release", redistribution_permission: "verified authorization",
+    permission_url: "https://example.org/permission", attribution: "Required credit"
+  }] };
+  assert.deepEqual(tilePublicationIssues(approved, env), []);
+});
