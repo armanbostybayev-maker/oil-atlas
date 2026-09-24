@@ -81,3 +81,18 @@ test("tile builder uses expected vector source layer and rejects unknown types",
   assert.equal(args[args.indexOf("-l") + 1], "infrastructure_oil");
   assert.throws(() => tileCommand({ type: "fields", input: "/tmp/fields.geojson", output: "/tmp/fields.mbtiles" }), /Only oil and gas/);
 });
+
+import { publicationIssues } from "../scripts/infrastructure-publication-gate.mjs";
+test("publication gate allows empty placeholders but blocks unapproved routes", () => {
+  const prepared = { status: "prepared_not_published", datasets: [{ type: "oil", features: 2, source_release: null }] };
+  assert.deepEqual(publicationIssues(prepared, [{ type: "oil", features: 0 }]), []);
+  assert.ok(publicationIssues(prepared, [{ type: "oil", features: 2 }]).some(issue => issue.includes("redistribution")));
+});
+test("publication gate requires approval evidence and exact feature count", () => {
+  const manifest = { status: "approved_for_publication", datasets: [{
+    type: "gas", features: 2, source_release: "verified release", redistribution_permission: "verified authorization",
+    permission_url: "https://example.org/permission", attribution: "Required credit"
+  }] };
+  assert.deepEqual(publicationIssues(manifest, [{ type: "gas", features: 2 }]), []);
+  assert.ok(publicationIssues(manifest, [{ type: "gas", features: 3 }]).some(issue => issue.includes("count")));
+});
