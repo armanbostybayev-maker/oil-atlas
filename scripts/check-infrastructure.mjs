@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join, resolve } from "node:path";
 import { INFRASTRUCTURE_TYPES, validateInfrastructureCollection } from "../map/InfrastructureLayer.mjs";
+import { publicationIssues } from "./infrastructure-publication-gate.mjs";
 
 const dir = fileURLToPath(new URL("../public/data/infrastructure/", import.meta.url));
 const names = {
@@ -11,10 +12,12 @@ const names = {
   stations: "stations.geojson", storage: "storage.geojson",
 };
 let failures = 0;
+const publicDatasets = [];
 for (const { id, label } of INFRASTRUCTURE_TYPES) {
   try {
     const file = join(dir, names[id]);
     const data = validateInfrastructureCollection(JSON.parse(await readFile(file, "utf8")), id);
+    publicDatasets.push({ type: id, features: data.features.length });
     let missing = 0, missingDates = 0, invalid = 0;
     for (const feature of data.features) {
       const p = feature.properties || {};
@@ -35,5 +38,15 @@ for (const { id, label } of INFRASTRUCTURE_TYPES) {
     console.error(`${label}: ${error.message}`);
     failures++;
   }
+}
+try {
+  const manifest = JSON.parse(await readFile(join(dir, "import-manifest.json"), "utf8"));
+  for (const issue of publicationIssues(manifest, publicDatasets)) {
+    console.error(`Publication gate: ${issue}`);
+    failures++;
+  }
+} catch (error) {
+  console.error(`Publication gate: ${error.message}`);
+  failures++;
 }
 if (failures) process.exitCode = 1;
