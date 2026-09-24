@@ -15,8 +15,11 @@ jobs:
       - run: npm ci
       - name: Infrastructure unit tests
         run: node --test tests/infrastructure.test.mjs
-      - name: Production build
-        run: npm run build
+      # The normal build first regenerates atlas.json from a private, untracked
+      # country world.geojsonl source. CI verifies the checked-in app/assets
+      # without pretending that unavailable source file exists.
+      - name: Vite build using checked-in public datasets
+        run: npx vite build --config vite.config.mjs
       - name: Infrastructure data checks
         run: node scripts/check-infrastructure.mjs
       - name: Full project regression suite (existing failures tracked separately)
