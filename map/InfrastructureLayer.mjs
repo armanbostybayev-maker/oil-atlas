@@ -89,7 +89,6 @@ export class InfrastructureLayer {
             "line-color": item.color,
             "line-width": ["interpolate", ["linear"], ["zoom"], 1, 1, 5, 2, 10, 4],
             "line-opacity": 0.88,
-            "line-dasharray": ["case", ["in", ["get", "status"], ["literal", ["proposed", "planned", "construction"]]], ["literal", [2, 2]], ["literal", [1, 0]]],
           },
         });
       } else {
