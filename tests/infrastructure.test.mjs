@@ -108,3 +108,11 @@ test("tile publication requires explicit dataset approval", () => {
   }] };
   assert.deepEqual(tilePublicationIssues(approved, env), []);
 });
+
+import { forbiddenPublicTileFiles } from "../scripts/check-public-tiles.mjs";
+test("public asset scan rejects raw and derived tile files, including nested paths", () => {
+  assert.deepEqual(
+    forbiddenPublicTileFiles(["data/oil.geojson", "tiles/oil.mbtiles", "tiles/gas.pmtiles", "tiles/0/0/0.pbf", "tiles/0/0/1.mvt"]),
+    ["tiles/oil.mbtiles", "tiles/gas.pmtiles", "tiles/0/0/0.pbf", "tiles/0/0/1.mvt"],
+  );
+});
