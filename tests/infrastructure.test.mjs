@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { INFRASTRUCTURE_TYPES, defaultInfrastructureVisibility, validateInfrastructureCollection, emptyCollection } from "../map/InfrastructureLayer.mjs";
+import { INFRASTRUCTURE_TYPES, defaultInfrastructureVisibility, validateInfrastructureCollection, emptyCollection, infrastructureTileConfig } from "../map/InfrastructureLayer.mjs";
 
 test("six independent infrastructure groups start hidden", () => {
   assert.equal(INFRASTRUCTURE_TYPES.length, 6);
@@ -56,4 +56,11 @@ test("GEM route accuracy, IDs and per-feature dates are preserved", () => {
   assert.equal(p.source_date, "2023-08-21");
   assert.equal(p.source_url, "https://www.gem.wiki/Example");
   assert.equal(p.product, "Gas");
+});
+
+test("tile configuration is opt-in and validates template URLs", () => {
+  assert.equal(infrastructureTileConfig("oil", {}), null);
+  assert.equal(infrastructureTileConfig("oil", { VITE_OIL_PIPELINE_TILES: "http://invalid/{z}/{x}/{y}.pbf" }), null);
+  assert.equal(infrastructureTileConfig("gas", { VITE_GAS_PIPELINE_TILES: "/tiles/gas/{z}/{x}/{y}.pbf" }).type, "vector");
+  assert.equal(infrastructureTileConfig("gas", { VITE_GAS_PIPELINE_TILES: "https://tiles.example.org/{z}/{x}/{y}.pbf" }).tiles[0], "https://tiles.example.org/{z}/{x}/{y}.pbf");
 });
