@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { TankerLayer } from "./TankerLayer.mjs";
+import { InfrastructureLayer, createInfrastructureCard } from "./InfrastructureLayer.mjs";
 import { createTankerCard } from "./TankerCard.mjs";
 import {
   Map,
@@ -37,12 +38,17 @@ export default function WorldMap({
   tankers = null,
   tankersEnabled = false,
   selectedVesselTypes,
+  infrastructureVisibility = {},
+  onInfrastructureCounts,
+  onInfrastructureError,
 }) {
   const language = useLanguage();
   const element = useRef(null),
     mapRef = useRef(null),
     live = useRef({}),
     tankerLayer = useRef(null),
+    infrastructureLayer = useRef(null),
+    infrastructurePopup = useRef(null),
     tankerPopup = useRef(null),
     [ready, setReady] = useState(false),
     [notice, setNotice] = useState("");
@@ -53,6 +59,8 @@ export default function WorldMap({
     metric,
     onSelect,
     onViewportChange,
+    onInfrastructureCounts,
+    onInfrastructureError,
   };
   useEffect(() => {
     let instance;
@@ -213,6 +221,15 @@ export default function WorldMap({
         const content = createTankerCard(vessel, t);
         tankerPopup.current = new Popup({ maxWidth: "420px", offset: 18 }).setLngLat(lngLat).setDOMContent(content).addTo(instance);
       }});
+      infrastructureLayer.current = new InfrastructureLayer(instance, {
+        onSelect: (feature, lngLat, type) => {
+          infrastructurePopup.current?.remove();
+          infrastructurePopup.current = new Popup({ maxWidth: "390px", offset: 12 })
+            .setLngLat(lngLat).setDOMContent(createInfrastructureCard(type, feature.properties)).addTo(instance);
+        },
+        onCounts: counts => live.current.onInfrastructureCounts?.(counts),
+        onError: error => live.current.onInfrastructureError?.(error),
+      });
       setReady(true);
       onReady?.(instance);
       if (import.meta.env.DEV) window.__oilAtlasMap = instance;
@@ -300,12 +317,22 @@ export default function WorldMap({
     instance.on("mouseout", () => popup.remove());
     return () => {
       tankerPopup.current?.remove();
+      infrastructurePopup.current?.remove();
+      infrastructureLayer.current?.destroy();
+      infrastructureLayer.current = null;
       tankerLayer.current?.destroy();
       tankerLayer.current = null;
       popup.remove();
       instance.remove();
     };
   }, [geometry, atlas]);
+  useEffect(() => {
+    if (!ready || !infrastructureLayer.current) return;
+    for (const [type, enabled] of Object.entries(infrastructureVisibility)) {
+      infrastructureLayer.current.setVisible(type, enabled);
+    }
+    infrastructurePopup.current?.remove();
+  }, [ready, infrastructureVisibility]);
   useEffect(() => {
     if (!ready || !tankerLayer.current) return;
     tankerLayer.current.setData(tankers || []);
