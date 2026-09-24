@@ -61,6 +61,7 @@ export function createInfrastructureCard(type, properties = {}) {
     ["Route accuracy", properties.geometry_accuracy || "Not specified"],
     ["Source", properties.source],
     ["Source date", properties.source_date],
+    ["Dataset release", properties.source_release],
   ];
   for (const [label, value] of fields) {
     if (value == null || value === "") continue;
