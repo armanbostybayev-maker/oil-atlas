@@ -36,5 +36,20 @@ jobs:
           echo "Unapproved tile endpoint correctly rejected"
       - name: Infrastructure data checks
         run: node scripts/check-infrastructure.mjs
+      - name: Reject accidentally published tile file (integration test)
+        run: |
+          mkdir -p public/data/infrastructure/tiles/0/0
+          trap 'rm -f public/data/infrastructure/tiles/0/0/0.pbf' EXIT
+          printf "test fixture" > public/data/infrastructure/tiles/0/0/0.pbf
+          if node scripts/check-infrastructure.mjs > /tmp/oil-atlas-denied-tile.log 2>&1; then
+            echo "ERROR: public tile file unexpectedly passed validation"
+            exit 1
+          fi
+          if ! grep -q "Public tile archive forbidden: data/infrastructure/tiles/0/0/0.pbf" /tmp/oil-atlas-denied-tile.log; then
+            cat /tmp/oil-atlas-denied-tile.log
+            echo "ERROR: validation failed for a reason other than the public tile guard"
+            exit 1
+          fi
+          echo "Accidentally published tile file correctly rejected"
       - name: Full project regression suite (required)
         run: npm test
