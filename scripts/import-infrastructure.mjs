@@ -24,11 +24,12 @@ const alias = {
   name: ["name", "Pipeline Name", "Pipeline name", "Project", "Project Name", "project_name"],
   operator: ["operator", "Operator", "Owner", "owner"],
   status: ["status", "Status"],
-  product: ["product", "Product", "Fuel", "fuel"],
+  product: ["product", "fuel", "Product", "Fuel"],
   length_km: ["length_km", "Length (km)", "Length (Km)", "Length"],
   capacity: ["capacity", "Capacity"],
-  geometry_accuracy: ["geometry_accuracy", "Route accuracy", "Route Accuracy"],
-  id: ["id", "ID", "GEM ID", "GEM_ID", "gem_id"],
+  geometry_accuracy: ["geometry_accuracy", "route_accuracy", "Route accuracy", "Route Accuracy"],
+  id: ["id", "source_id", "ID", "GEM ID", "GEM_ID", "gem_id"],
+  countries: ["countries", "Countries"],
 };
 function options(args) {
   const result = {};
@@ -66,8 +67,8 @@ export function normalizeCollection(data, { type, source, sourceUrl, release, ac
     props.length_km = props.length_km != null && Number.isFinite(length) && length >= 0 ? length : null;
     props.geometry_accuracy = props.geometry_accuracy || accuracy || "unknown";
     props.source = source;
-    props.source_url = sourceUrl;
-    props.source_date = release;
+    props.source_url = /^https:\/\//.test(input.source_url || "") ? input.source_url : sourceUrl;
+    props.source_date = input.source_date || release;
     features.push({ type: "Feature", geometry: feature.geometry, properties: props });
   }
   return { type: "FeatureCollection", features };
