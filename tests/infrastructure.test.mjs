@@ -66,3 +66,18 @@ test("tile configuration is opt-in and validates template URLs", () => {
   assert.equal(infrastructureTileConfig("gas", { VITE_GAS_PIPELINE_TILES: "/tiles/gas/{z}/{x}/{y}.pbf" }).type, "vector");
   assert.equal(infrastructureTileConfig("gas", { VITE_GAS_PIPELINE_TILES: "https://tiles.example.org/{z}/{x}/{y}.pbf" }).tiles[0], "https://tiles.example.org/{z}/{x}/{y}.pbf");
 });
+
+import { resolve } from "node:path";
+import { assertPrivateTileOutput, tileCommand } from "../scripts/build-infrastructure-tiles.mjs";
+
+test("tile builder refuses outputs inside public web assets", () => {
+  const root = resolve("/tmp/oil-atlas-fixture");
+  assert.throws(() => assertPrivateTileOutput(resolve(root, "public/tiles/oil.mbtiles"), root), /Refusing/);
+  assert.throws(() => assertPrivateTileOutput(resolve(root, "public/oil.mbtiles"), root), /Refusing/);
+  assert.equal(assertPrivateTileOutput(resolve(root, "private/oil.mbtiles"), root), resolve(root, "private/oil.mbtiles"));
+});
+test("tile builder uses expected vector source layer and rejects unknown types", () => {
+  const args = tileCommand({ type: "oil", input: "/tmp/oil.geojson", output: "/tmp/oil.mbtiles" });
+  assert.equal(args[args.indexOf("-l") + 1], "infrastructure_oil");
+  assert.throws(() => tileCommand({ type: "fields", input: "/tmp/fields.geojson", output: "/tmp/fields.mbtiles" }), /Only oil and gas/);
+});
