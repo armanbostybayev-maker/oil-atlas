@@ -20,6 +20,20 @@ jobs:
       # without pretending that unavailable source file exists.
       - name: Vite build using checked-in public datasets
         run: npx vite build --config vite.config.mjs
+      - name: Reject unapproved public tile configuration (integration test)
+        env:
+          VITE_OIL_PIPELINE_TILES: "https://example.org/oil/{z}/{x}/{y}.pbf"
+        run: |
+          if npx vite build --config vite.config.mjs > /tmp/oil-atlas-denied-build.log 2>&1; then
+            echo "ERROR: unapproved tile build unexpectedly succeeded"
+            exit 1
+          fi
+          if ! grep -q "Infrastructure tile publication blocked" /tmp/oil-atlas-denied-build.log; then
+            cat /tmp/oil-atlas-denied-build.log
+            echo "ERROR: build failed for a reason other than the publication gate"
+            exit 1
+          fi
+          echo "Unapproved tile endpoint correctly rejected"
       - name: Infrastructure data checks
         run: node scripts/check-infrastructure.mjs
       - name: Full project regression suite (required)
