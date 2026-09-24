@@ -22,7 +22,5 @@ jobs:
         run: npx vite build --config vite.config.mjs
       - name: Infrastructure data checks
         run: node scripts/check-infrastructure.mjs
-      - name: Full project regression suite (existing failures tracked separately)
-        if: always()
-        continue-on-error: true
+      - name: Full project regression suite (required)
         run: npm test
