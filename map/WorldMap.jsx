@@ -237,6 +237,8 @@ export default function WorldMap({
     instance.on("click", (event) => {
       if (!instance.getLayer("countries-fill")) return;
       if (instance.getLayer("tankers") && instance.queryRenderedFeatures(event.point, { layers: ["tankers"] }).length) return;
+      const infrastructureLayers = ["oil", "gas", "fields", "processing", "stations", "storage"].map(type => `infrastructure-${type}-layer`).filter(id => instance.getLayer(id) && instance.getLayoutProperty(id, "visibility") === "visible");
+      if (infrastructureLayers.length && instance.queryRenderedFeatures(event.point, { layers: infrastructureLayers }).length) return;
       const found = instance.queryRenderedFeatures(event.point, {
         layers: ["refinery-circles", "countries-fill"],
       })[0];
