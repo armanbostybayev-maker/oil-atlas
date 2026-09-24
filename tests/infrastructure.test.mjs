@@ -43,3 +43,17 @@ test("separate segments sharing a project ID are not discarded", () => {
   assert.equal(result.features[0].properties.id, "shared");
   assert.equal(result.features[1].properties.id, "shared");
 });
+
+test("GEM route accuracy, IDs and per-feature dates are preserved", () => {
+  const result = normalizeCollection({ type: "FeatureCollection", features: [{
+    type: "Feature", geometry: { type: "MultiLineString", coordinates: [[[1, 2], [3, 4]]] },
+    properties: { source_id: "P0061", route_accuracy: "very low (straight line/schematic)",
+      source_date: "2023-08-21", source_url: "https://www.gem.wiki/Example", fuel: "Gas" }
+  }] }, { ...metadata, type: "gas" });
+  const p = result.features[0].properties;
+  assert.equal(p.id, "P0061");
+  assert.equal(p.geometry_accuracy, "very low (straight line/schematic)");
+  assert.equal(p.source_date, "2023-08-21");
+  assert.equal(p.source_url, "https://www.gem.wiki/Example");
+  assert.equal(p.product, "Gas");
+});
