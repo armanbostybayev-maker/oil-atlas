@@ -68,7 +68,9 @@ export function normalizeCollection(data, { type, source, sourceUrl, release, ac
     props.geometry_accuracy = props.geometry_accuracy || accuracy || "unknown";
     props.source = source;
     props.source_url = /^https:\/\//.test(input.source_url || "") ? input.source_url : sourceUrl;
-    props.source_date = input.source_date || release;
+    // Record-level source date and dataset release are different metadata.
+    props.source_date = input.source_date || null;
+    props.source_release = release;
     features.push({ type: "Feature", geometry: feature.geometry, properties: props });
   }
   return { type: "FeatureCollection", features };
