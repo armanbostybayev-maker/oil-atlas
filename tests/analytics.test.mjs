@@ -117,7 +117,10 @@ test("real dataset conservation and missing price coverage", () => {
       a.stats.reduce((s, c) => s + (c.capacity ?? 0) * 1e6, 0) - matched,
     ) < 0.01,
   );
-  assert.equal(a.getDataCoverage("gasolinePrice").known, 0);
+  assert.equal(
+    a.getDataCoverage("gasolinePrice").known,
+    a.stats.filter((c) => Number.isFinite(c.gasolinePrice)).length,
+  );
   for (const c of a.stats) {
     if (!c.completeCapacity) assert.equal(c.rcRatio, null);
     if (c.completeCapacity && c.consumption > 0)

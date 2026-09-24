@@ -1,0 +1,55 @@
+name: Infrastructure validation
+on:
+  push:
+    branches: [main, feat/global-pipeline-infrastructure]
+  pull_request:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Infrastructure unit tests
+        run: node --test tests/infrastructure.test.mjs tests/pipelines.test.mjs
+      # The normal build first regenerates atlas.json from a private, untracked
+      # country world.geojsonl source. CI verifies the checked-in app/assets
+      # without pretending that unavailable source file exists.
+      - name: Vite build using checked-in public datasets
+        run: npx vite build --config vite.config.mjs
+      - name: Reject unapproved public tile configuration (integration test)
+        env:
+          VITE_OIL_PIPELINE_TILES: "https://example.org/oil/{z}/{x}/{y}.pbf"
+        run: |
+          if npx vite build --config vite.config.mjs > /tmp/oil-atlas-denied-build.log 2>&1; then
+            echo "ERROR: unapproved tile build unexpectedly succeeded"
+            exit 1
+          fi
+          if ! grep -q "Infrastructure tile publication blocked" /tmp/oil-atlas-denied-build.log; then
+            cat /tmp/oil-atlas-denied-build.log
+            echo "ERROR: build failed for a reason other than the publication gate"
+            exit 1
+          fi
+          echo "Unapproved tile endpoint correctly rejected"
+      - name: Infrastructure data checks
+        run: node scripts/check-infrastructure.mjs
+      - name: Reject accidentally published tile file (integration test)
+        run: |
+          mkdir -p public/data/infrastructure/tiles/0/0
+          trap 'rm -f public/data/infrastructure/tiles/0/0/0.pbf' EXIT
+          printf "test fixture" > public/data/infrastructure/tiles/0/0/0.pbf
+          if node scripts/check-infrastructure.mjs > /tmp/oil-atlas-denied-tile.log 2>&1; then
+            echo "ERROR: public tile file unexpectedly passed validation"
+            exit 1
+          fi
+          if ! grep -q "Public tile archive forbidden: data/infrastructure/tiles/0/0/0.pbf" /tmp/oil-atlas-denied-tile.log; then
+            cat /tmp/oil-atlas-denied-tile.log
+            echo "ERROR: validation failed for a reason other than the public tile guard"
+            exit 1
+          fi
+          echo "Accidentally published tile file correctly rejected"
+      - name: Full project regression suite (required)
+        run: npm test

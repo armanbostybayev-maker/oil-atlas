@@ -1,4 +1,4 @@
-﻿import { t, useLanguage } from "../controls/i18n.jsx";
+import { t, useLanguage } from "../controls/i18n.jsx";
 import React, {
   useEffect,
   useMemo,
@@ -20,6 +20,10 @@ import { MODES, CLASSES, ANOMALIES } from "../analytics/config.mjs";
 import { colorScale } from "../map/layers.mjs";
 import { loadTankers } from "../map/TankerLayer.mjs";
 import VesselTypes from "../panels/VesselTypes.jsx";
+import InfrastructureControls from "../controls/InfrastructureControls.jsx";
+import usePipelines from '../controls/usePipelines.jsx';
+import PipelineAnalytics from '../panels/PipelineAnalytics.jsx';
+import { defaultInfrastructureVisibility } from "../map/InfrastructureLayer.mjs";
 import {
   ALL_VESSEL_TYPES,
   normalizeFleet,
@@ -41,6 +45,11 @@ export function createAtlasApp({
     const onViewportChange = useCallback(viewport => { mapViewport.current = viewport; }, []);
     const [help, setHelp] = useState(null);
     const closeHelp = useCallback(() => setHelp(null), []);
+    const [infrastructureVisibility, setInfrastructureVisibility] = useState(defaultInfrastructureVisibility);
+    const [infrastructureCounts, setInfrastructureCounts] = useState({});
+    const [infrastructureError, setInfrastructureError] = useState("");
+    const [pipelinesOpen,setPipelinesOpen] = useState(false);
+    const pipelines=usePipelines(pipelinesOpen);
     const [tankers, setTankers] = useState([]);
     const [tankersEnabled, setTankersEnabled] = useState(true);
     const [selectedVesselTypes, setSelectedVesselTypes] =
@@ -95,7 +104,7 @@ export function createAtlasApp({
     const menu = activePanel === "menu", quality = activePanel === "quality";
     const activeAnalysis = state.mode === "none" ? null : state.mode;
     const analysisMode = activeAnalysis || "overview";
-    const setMenu = (open) => setActivePanel(open ? "menu" : "analysis");
+    const setMenu = (open) => { if(open)setPipelinesOpen(false);setActivePanel(open ? "menu" : "analysis"); };
     const setQuality = (open) => setActivePanel(open ? "quality" : "analysis");
     const update = (patch) =>
       setState((s) => ({
@@ -218,6 +227,7 @@ export function createAtlasApp({
       setFocus({ world: true });
     }
     function mode(id) {
+      setPipelinesOpen(false);
       update({
         mode: id,
         metric: MODES[id].metrics[0].id,
@@ -254,7 +264,7 @@ export function createAtlasApp({
     }, [selectedVesselTypes]);
 
     return (
-      <main className="atlas-app" data-active-analysis={activeAnalysis || "none"}>
+      <main className="atlas-app" data-pipelines-open={pipelinesOpen} data-active-analysis={activeAnalysis || "none"}>
         {help && <ModeHelp mode={help} onClose={closeHelp} />}
         <WorldMap
           geometry={geometry}
@@ -273,6 +283,11 @@ export function createAtlasApp({
           tankers={fleet}
           tankersEnabled={tankersEnabled}
           selectedVesselTypes={selectedVesselTypes}
+          infrastructureVisibility={pipelinesOpen?{...infrastructureVisibility,oil:false,gas:false}:infrastructureVisibility}
+          pipelineModel={pipelines}
+          pipelinesOpen={pipelinesOpen}
+          onInfrastructureCounts={setInfrastructureCounts}
+          onInfrastructureError={setInfrastructureError}
         />
 
         <MapOverlayLayout
@@ -307,6 +322,16 @@ export function createAtlasApp({
           onSelect={owner}
           onHover={setHoverOwner}
         />
+            <InfrastructureControls
+              onAnalytics={()=>{setPipelinesOpen(true);setMenu(false);}}
+              visibility={infrastructureVisibility}
+              onChange={(type, enabled) => {
+                setInfrastructureError("");
+                setInfrastructureVisibility(current => ({ ...current, [type]: enabled }));
+              }}
+              counts={infrastructureCounts}
+              error={infrastructureError}
+            />
             <VesselTypes
               selected={selectedVesselTypes}
               onChange={setSelectedVesselTypes}
@@ -319,7 +344,7 @@ export function createAtlasApp({
             />
 </>}
           workspace={<>
-            {menu ? <>        {t(
+            {pipelinesOpen ? <PipelineAnalytics model={pipelines} onClose={()=>setPipelinesOpen(false)} /> : menu ? <>        {t(
           menu && (
             <aside
               className="panel analytics-menu"
@@ -562,7 +587,7 @@ export function createAtlasApp({
         </div>
 </section> : <button className="panel reopen-analysis" onClick={() => setMenu(true)}>{t("Open analytics menu")}</button>}
           </>}
-          legend={activeAnalysis ? <>        <section
+          legend={pipelinesOpen ? <section className="panel pipeline-map-legend"><strong>Трубопроводы</strong><p>{pipelines.color === "utilization" ? "Загрузка: синий ≤25%, бирюзовый ≤50%, зелёный ≤75%, оранжевый ≤100%, красный >100%." : pipelines.color === "capacity" ? `Мощность: ${pipelines.filters.unit || "выберите единицы и группу"}; светлый → тёмный.` : pipelines.color === "status" ? "Зелёный — действует; оранжевый — строится; синий — проект; фиолетовый — простой; тёмный — закрыт." : "Оранжевый — нефть, синий — газ, фиолетовый — конденсат, зелёный — нефтепродукты."}</p><small>Серый пунктир — нет сопоставимых данных. Жёлтый — выбор / наведение. Геометрия может быть приблизительной.</small></section> : activeAnalysis ? <>        <section
           className="panel legend"
           aria-label={t("Map legend")}
         >
@@ -737,7 +762,7 @@ export function createAtlasApp({
           <BaseMapSwitcher value={state.basemap} onChange={basemap => update({ basemap })} />
         </div>
 </>}
-          summary={<>        <div className="kpis panel" aria-label={t("Map summary")}>
+          summary={pipelinesOpen ? null : <>        <div className="kpis panel" aria-label={t("Map summary")}>
           {t(
             [
               ["Refineries", kpi.count],
@@ -767,4 +792,3 @@ export function createAtlasApp({
     );
   };
 }
-

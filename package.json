@@ -9,7 +9,9 @@
     "build": "node scripts/run.mjs build",
     "preview": "node scripts/run.mjs preview",
     "test": "node --test tests/*.test.mjs",
-    "test:browser": "node tests/browser.mjs"
+    "test:browser": "node tests/browser.mjs",
+    "test:pipelines:browser": "node tests/pipelines-browser.mjs",
+    "build:prepared": "vite build --config vite.config.mjs"
   },
   "dependencies": {
     "maplibre-gl": "6.9.0",

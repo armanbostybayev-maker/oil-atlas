@@ -1,0 +1,57 @@
+import {chromium} from '@playwright/test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const browser=await chromium.launch({channel:process.platform==='win32'?'msedge':undefined,headless:true,args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+const out='artifacts/pipelines';fs.mkdirSync(out,{recursive:true});
+try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(30000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/api/tankers',r=>r.fulfill({json:{vessels:[]}}));
+ await page.goto(process.env.PIPELINE_TEST_URL||'http://127.0.0.1:5184/',{waitUntil:'domcontentloaded'});
+ await page.getByRole('button',{name:'Аналитика трубопроводов',exact:true}).click();
+ await page.getByText('Нет разрешённых опубликованных маршрутов.',{exact:false}).waitFor();
+ await page.getByText('Данные и локальное открытие',{exact:true}).click();
+ const input=page.getByLabel('Локальный GeoJSON: Нефть');
+ const make=(id,props={},coords=[[20,10],[24,12]])=>({type:'Feature',geometry:{type:'LineString',coordinates:coords},properties:{source_id:id,name:`Pipeline ${id}`,fuel:'Oil',status:'operating',countries:'A; B',...props}});
+ const fixture={type:'FeatureCollection',features:[make('one',{capacity_value:100,capacity_unit:'kbbl/d',capacity_period:'2024',capacity_kind:'design',throughput_value:120,throughput_unit:'kbbl/d',throughput_period:'2024',throughput_kind:'actual'}),make('missing',{},[[30,10],[35,12]])]};
+ await input.setInputFiles({name:'synthetic-oil.geojson',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(fixture))});
+ await page.getByRole('button',{name:'Pipeline one',exact:true}).click();
+ await page.locator('.pipeline-card').waitFor();
+ assert.ok((await page.locator('.pipeline-card').innerText()).includes('120'));
+ assert.ok((await page.locator('.pipeline-card').innerText()).includes('Аномалия'));
+ await page.getByText('Сценарный анализ — не факт',{exact:true}).click();
+ assert.ok((await page.locator('.pipeline-scenario').innerText()).includes('70'));
+ await page.getByRole('button',{name:'Pipeline missing',exact:true}).click();
+ assert.ok((await page.locator('.pipeline-card').innerText()).includes('Нет данных о загрузке'));
+ await page.getByLabel('Поиск трубопроводов',{exact:true}).fill('missing');
+ assert.equal(await page.locator('.pipeline-table').first().locator('tbody tr').count(),1);
+ await page.getByRole('button',{name:'Сбросить фильтры',exact:true}).click();
+ await page.waitForFunction(()=>window.__oilAtlasMap?.isSourceLoaded('pipeline-analytics'),null,{timeout:60000});
+ await page.evaluate(()=>{window.pipelineMapErrors=[];window.__oilAtlasMap.on('error',e=>window.pipelineMapErrors.push(e.error.message));});
+ await page.getByLabel('Цвет маршрутов',{exact:true}).selectOption('utilization');
+ await page.evaluate(()=>window.__oilAtlasMap.jumpTo({center:[32.5,11],zoom:5}));
+ await page.waitForTimeout(700);
+ const point=await page.evaluate(()=>{const p=window.__oilAtlasMap.project([32.5,11]);return {x:p.x,y:p.y};});
+ await page.mouse.click(point.x,point.y);
+ await page.waitForFunction(()=>document.querySelector('.pipeline-card')?.dataset.pipelineId==='oil:missing');
+ assert.equal(await page.locator('tr[aria-selected=true]').count(),1);
+ const changes=await page.evaluate(()=>{window.pipelineSource=window.__oilAtlasMap.getSource('pipeline-analytics');return true;});assert.ok(changes);
+ await page.getByLabel('Поиск трубопроводов',{exact:true}).fill('one');
+ assert.ok(await page.evaluate(()=>window.pipelineSource===window.__oilAtlasMap.getSource('pipeline-analytics')));
+ await page.getByRole('button',{name:'Сбросить фильтры',exact:true}).click();
+ if(process.env.PIPELINE_OIL_FILE&&process.env.PIPELINE_GAS_FILE){
+  await input.setInputFiles(process.env.PIPELINE_OIL_FILE);
+  await page.getByLabel('Локальный GeoJSON: Газ').setInputFiles(process.env.PIPELINE_GAS_FILE);
+  await page.getByText('Таблица маршрутов (4401)',{exact:true}).waitFor();
+  assert.equal(await page.locator('.pipeline-table').first().locator('tbody tr').count(),25);
+  await page.locator('.pipeline-table').first().locator('tbody button').first().click();
+  assert.ok((await page.locator('.pipeline-card').innerText()).includes('Нет данных о загрузке'));
+ }
+ await page.waitForFunction(()=>window.__oilAtlasMap.isSourceLoaded('pipeline-analytics')&&!window.__oilAtlasMap.isMoving(),null,{timeout:60000});
+ await page.screenshot({path:`${out}/desktop.png`});
+ assert.deepEqual(await page.evaluate(()=>window.pipelineMapErrors),[]);
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:`${out}/mobile.png`});
+ assert.ok(await page.evaluate(()=>document.querySelector('.pipeline-panel').getBoundingClientRect().right<=innerWidth));
+ assert.equal(errors.length,0,errors.join('\n'));
+ fs.writeFileSync(`${out}/report.json`,JSON.stringify({passed:true,errors,realData:!!process.env.PIPELINE_OIL_FILE},null,2));
+ console.log('PASS: local-only import, typed metrics, >100% anomaly, scenario, missing data, filters, pagination, responsive render');
+}finally{await browser.close();}

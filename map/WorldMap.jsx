@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { TankerLayer } from "./TankerLayer.mjs";
+import { InfrastructureLayer, createInfrastructureCard } from "./InfrastructureLayer.mjs";
+import { PipelineAnalyticsLayer } from './PipelineAnalyticsLayer.mjs';
 import { createTankerCard } from "./TankerCard.mjs";
 import {
   Map,
@@ -37,22 +39,33 @@ export default function WorldMap({
   tankers = null,
   tankersEnabled = false,
   selectedVesselTypes,
+  infrastructureVisibility = {},
+  onInfrastructureCounts,
+  onInfrastructureError,
+  pipelineModel,
+  pipelinesOpen=false,
 }) {
   const language = useLanguage();
+  const pipelineLayer=useRef(null);
   const element = useRef(null),
     mapRef = useRef(null),
     live = useRef({}),
     tankerLayer = useRef(null),
+    infrastructureLayer = useRef(null),
+    infrastructurePopup = useRef(null),
     tankerPopup = useRef(null),
     [ready, setReady] = useState(false),
     [notice, setNotice] = useState("");
   live.current = {
+    pipelineModel,
     atlas,
     state,
     values,
     metric,
     onSelect,
     onViewportChange,
+    onInfrastructureCounts,
+    onInfrastructureError,
   };
   useEffect(() => {
     let instance;
@@ -213,6 +226,17 @@ export default function WorldMap({
         const content = createTankerCard(vessel, t);
         tankerPopup.current = new Popup({ maxWidth: "420px", offset: 18 }).setLngLat(lngLat).setDOMContent(content).addTo(instance);
       }});
+      pipelineLayer.current = new PipelineAnalyticsLayer(instance,id=>live.current.pipelineModel?.select(id));
+      infrastructureLayer.current = new InfrastructureLayer(instance, {
+        onSelect: (feature, lngLat, type) => {
+          infrastructurePopup.current?.remove();
+          infrastructurePopup.current = new Popup({ maxWidth: "390px", offset: 12 })
+            .setLngLat(lngLat).setDOMContent(createInfrastructureCard(type, feature.properties)).addTo(instance);
+        },
+        onCounts: counts => live.current.onInfrastructureCounts?.(counts),
+        onError: error => live.current.onInfrastructureError?.(error),
+        tileEnv: import.meta.env,
+      });
       setReady(true);
       onReady?.(instance);
       if (import.meta.env.DEV) window.__oilAtlasMap = instance;
@@ -220,6 +244,9 @@ export default function WorldMap({
     instance.on("click", (event) => {
       if (!instance.getLayer("countries-fill")) return;
       if (instance.getLayer("tankers") && instance.queryRenderedFeatures(event.point, { layers: ["tankers"] }).length) return;
+      if(pipelineLayer.current?.hit(event.point))return;
+      const infrastructureLayers = ["oil", "gas", "fields", "processing", "stations", "storage"].map(type => `infrastructure-${type}-layer`).filter(id => instance.getLayer(id) && instance.getLayoutProperty(id, "visibility") === "visible");
+      if (infrastructureLayers.length && instance.queryRenderedFeatures(event.point, { layers: infrastructureLayers }).length) return;
       const found = instance.queryRenderedFeatures(event.point, {
         layers: ["refinery-circles", "countries-fill"],
       })[0];
@@ -299,13 +326,27 @@ export default function WorldMap({
     });
     instance.on("mouseout", () => popup.remove());
     return () => {
+      pipelineLayer.current?.destroy();pipelineLayer.current=null;
       tankerPopup.current?.remove();
+      infrastructurePopup.current?.remove();
+      infrastructureLayer.current?.destroy();
+      infrastructureLayer.current = null;
       tankerLayer.current?.destroy();
       tankerLayer.current = null;
       popup.remove();
       instance.remove();
     };
   }, [geometry, atlas]);
+  useEffect(()=>{if(ready&&pipelineModel)pipelineLayer.current?.setData(pipelineModel.records);},[ready,pipelineModel?.records]);
+  useEffect(()=>{if(ready&&pipelineModel)pipelineLayer.current?.update({enabled:pipelinesOpen,filtered:pipelineModel.filtered,selected:pipelineModel.selected,color:pipelineModel.color,unit:pipelineModel.filters.unit,group:pipelineModel.filters.group});},[ready,pipelinesOpen,pipelineModel?.filtered,pipelineModel?.selected,pipelineModel?.color,pipelineModel?.filters.unit,pipelineModel?.filters.group]);
+  useEffect(()=>{if(ready&&pipelinesOpen&&pipelineModel?.selected)pipelineLayer.current?.focus(pipelineModel.selected);},[ready,pipelinesOpen,pipelineModel?.selected]);
+  useEffect(() => {
+    if (!ready || !infrastructureLayer.current) return;
+    for (const [type, enabled] of Object.entries(infrastructureVisibility)) {
+      infrastructureLayer.current.setVisible(type, enabled);
+    }
+    infrastructurePopup.current?.remove();
+  }, [ready, infrastructureVisibility]);
   useEffect(() => {
     if (!ready || !tankerLayer.current) return;
     tankerLayer.current.setData(tankers || []);
