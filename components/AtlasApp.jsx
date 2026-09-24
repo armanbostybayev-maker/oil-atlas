@@ -1,4 +1,4 @@
-﻿import { t, useLanguage } from "../controls/i18n.jsx";
+import { t, useLanguage } from "../controls/i18n.jsx";
 import React, {
   useEffect,
   useMemo,
@@ -104,7 +104,7 @@ export function createAtlasApp({
     const menu = activePanel === "menu", quality = activePanel === "quality";
     const activeAnalysis = state.mode === "none" ? null : state.mode;
     const analysisMode = activeAnalysis || "overview";
-    const setMenu = (open) => setActivePanel(open ? "menu" : "analysis");
+    const setMenu = (open) => { if(open)setPipelinesOpen(false);setActivePanel(open ? "menu" : "analysis"); };
     const setQuality = (open) => setActivePanel(open ? "quality" : "analysis");
     const update = (patch) =>
       setState((s) => ({
@@ -227,6 +227,7 @@ export function createAtlasApp({
       setFocus({ world: true });
     }
     function mode(id) {
+      setPipelinesOpen(false);
       update({
         mode: id,
         metric: MODES[id].metrics[0].id,
@@ -263,7 +264,7 @@ export function createAtlasApp({
     }, [selectedVesselTypes]);
 
     return (
-      <main className="atlas-app" data-active-analysis={activeAnalysis || "none"}>
+      <main className="atlas-app" data-pipelines-open={pipelinesOpen} data-active-analysis={activeAnalysis || "none"}>
         {help && <ModeHelp mode={help} onClose={closeHelp} />}
         <WorldMap
           geometry={geometry}
@@ -586,7 +587,7 @@ export function createAtlasApp({
         </div>
 </section> : <button className="panel reopen-analysis" onClick={() => setMenu(true)}>{t("Open analytics menu")}</button>}
           </>}
-          legend={activeAnalysis ? <>        <section
+          legend={pipelinesOpen ? <section className="panel pipeline-map-legend"><strong>Трубопроводы</strong><p>{pipelines.color === "utilization" ? "Загрузка: синий ≤25%, бирюзовый ≤50%, зелёный ≤75%, оранжевый ≤100%, красный >100%." : pipelines.color === "capacity" ? `Мощность: ${pipelines.filters.unit || "выберите единицы и группу"}; светлый → тёмный.` : pipelines.color === "status" ? "Зелёный — действует; оранжевый — строится; синий — проект; фиолетовый — простой; тёмный — закрыт." : "Оранжевый — нефть, синий — газ, фиолетовый — конденсат, зелёный — нефтепродукты."}</p><small>Серый пунктир — нет сопоставимых данных. Жёлтый — выбор / наведение. Геометрия может быть приблизительной.</small></section> : activeAnalysis ? <>        <section
           className="panel legend"
           aria-label={t("Map legend")}
         >
@@ -761,7 +762,7 @@ export function createAtlasApp({
           <BaseMapSwitcher value={state.basemap} onChange={basemap => update({ basemap })} />
         </div>
 </>}
-          summary={<>        <div className="kpis panel" aria-label={t("Map summary")}>
+          summary={pipelinesOpen ? null : <>        <div className="kpis panel" aria-label={t("Map summary")}>
           {t(
             [
               ["Refineries", kpi.count],
@@ -791,4 +792,3 @@ export function createAtlasApp({
     );
   };
 }
-

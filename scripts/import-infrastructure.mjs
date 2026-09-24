@@ -22,7 +22,7 @@ const outputNames = {
 };
 const alias = {
   name: ["name", "Pipeline Name", "Pipeline name", "Project", "Project Name", "project_name"],
-  operator: ["operator", "Operator", "Owner", "owner"],
+  operator: ["operator", "Operator"],
   status: ["status", "Status"],
   product: ["product", "fuel", "Product", "Fuel"],
   length_km: ["length_km", "Length (km)", "Length (Km)", "Length"],

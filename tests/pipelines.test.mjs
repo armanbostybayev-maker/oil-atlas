@@ -8,6 +8,8 @@ test('source properties are separate; absent is null while measured zero is reta
  assert.equal(p.capacity_value,null);assert.equal(p.operator,null);assert.equal(p.utilization_pct,null);assert.equal(p.geometry_accuracy,'medium');assert.deepEqual(p.countries,['A','B']);assert.equal(p.original_properties[0].custom,'retained');assert.notEqual(p.original_properties[0],f.properties);
  assert.equal(measured({throughput_value:0}).utilization_pct,0);
  assert.equal(normalizePipeline(feature({fuel:'NGL'})).product,'other');
+ assert.equal(normalizePipeline(feature({Owner:'Owner only'})).operator,null);
+ assert.equal(measured({capacity_period:2024,throughput_period:'2024'}).utilization_pct,120);
 });
 test('units retain case and density conversions require documentation and a calendar year',()=>{
  assert.equal(normalizeFlow(1,'kbbl/d','2024',{product:'oil'}).value,1000);

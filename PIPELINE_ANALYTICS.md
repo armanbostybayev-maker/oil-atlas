@@ -32,3 +32,17 @@ Only compare matching observation periods. Normalize oil volume to bbl/day, mass
 ## Publication
 
 No supplied routes, derived tiles or local filenames are committed to public assets. Release and redistribution evidence are still required by the existing gate. No deployment or merge is authorized by this task.
+
+## Verification and use
+
+Open **Аналитика трубопроводов** in the infrastructure controls. Under **Данные и локальное открытие**, choose the oil and gas files separately. These are read through the browser File API; no upload, local storage, or publication is performed. Closing analysis restores the other overlays. Table pages contain at most 25 rows. Geometry sources are not rebuilt when filtering; filters and paint properties change in place. A geometry-edge WeakMap avoids recomputing geodesic segments for each country's summary.
+
+Known coverage on supplied files: 4,401 unique objects; 0 capacity, 0 actual throughput, 0 comparable utilization. Geometry length is an explicitly approximate estimate (about 1,373,862 km across deduplicated segments), not a reported length or length of a functioning network. Country statistics include the full associated routes, not boundary-clipped lengths. Existing vector infrastructure overlays remain supported; analytical records currently require GeoJSON attributes, not a tile-only endpoint.
+
+Required commands: `npm test`; `node scripts/check-infrastructure.mjs`; `npx vite build --config vite.config.mjs`. The normal build wrapper regenerates refinery data from an external private source; it was not substituted with invented source data. CI uses the prepared-public-data Vite build and retains both publication rejection integration tests. CI now explicitly includes pipeline unit tests as well as the full regression suite.
+
+Browser: start Vite at port 5184, run `node tests/pipelines-browser.mjs`. Optional `PIPELINE_OIL_FILE` and `PIPELINE_GAS_FILE` point to local-only source files, `PIPELINE_TEST_URL` overrides the URL. Browser checks include synthetic measured/missing records, >100% utilization, isolated scenarios, live map-to-row selection, unchanged GeoJSON source identity under filtering, all 4,401 supplied routes, pagination and mobile bounds. Screenshots and reports remain in ignored `artifacts/pipelines/`.
+
+Changed files: `analytics/pipelines.mjs`, `controls/usePipelines.jsx`, `panels/PipelineAnalytics.jsx`, `styles/pipelines.css`, `map/PipelineAnalyticsLayer.mjs`, `map/WorldMap.jsx`, `components/AtlasApp.jsx`, `controls/InfrastructureControls.jsx`, `scripts/import-infrastructure.mjs` (preserve raw attributes), `tests/pipelines.test.mjs`, `tests/pipelines-browser.mjs`, `.github/workflows/infrastructure.yml`, this document. No public infrastructure assets or permission manifests changed.
+
+Final local checks: 33 unit/regression tests passed; infrastructure checker passed with six empty public layers; Vite prepared-data build passed; unapproved tile endpoint integration correctly blocked; browser test passed with both supplied files (4,401 objects) and synthetic measurements. Summary calculation on this machine improved from about 482 ms to 197 ms with cached geometry; filtering about 3 ms. Timing is indicative, not a performance guarantee. Added build:prepared and test:pipelines:browser package scripts.

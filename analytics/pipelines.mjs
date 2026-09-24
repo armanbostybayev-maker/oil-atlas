@@ -29,7 +29,7 @@ export function normalizeFlow(value,unit,period,{product,density_kg_m3,density_s
 export function derivePipeline(p){
  const c=normalizeFlow(p.capacity_value,p.capacity_unit,p.capacity_period,{...p,standard_conditions:p.capacity_standard_conditions});
  const q=normalizeFlow(p.throughput_value,p.throughput_unit,p.throughput_period,{...p,standard_conditions:p.throughput_standard_conditions});
- const knownProduct=p.product!=='other';
+ const knownProduct=['oil','gas','condensate','products'].includes(p.product);
  const reasons=[];
  if(c.value===null||q.value===null)reasons.push('missing_or_unsupported_measurement');
  if(!p.capacity_period||p.capacity_period!==p.throughput_period)reasons.push('incompatible_period');
@@ -54,8 +54,8 @@ export function normalizePipeline(feature,type='oil',index=0){
  countries:list(first(p,'countries','Countries')),length_km:numeric(first(p,'length_km','Length (km)')),
  commissioning_year:numeric(first(p,'commissioning_year','Start year')),source:first(p,'source'),source_url:safePipelineUrl(first(p,'source_url')),
  source_release:first(p,'source_release'),source_date:first(p,'source_date'),geometry_accuracy:first(p,'geometry_accuracy','route_accuracy')||'unknown',
- capacity_value:numeric(first(p,'capacity_value')),capacity_unit:first(p,'capacity_unit'),capacity_period:first(p,'capacity_period'),capacity_kind:first(p,'capacity_kind'),
- throughput_value:numeric(first(p,'throughput_value')),throughput_unit:first(p,'throughput_unit'),throughput_period:first(p,'throughput_period'),throughput_kind:first(p,'throughput_kind'),
+ capacity_value:numeric(first(p,'capacity_value')),capacity_unit:first(p,'capacity_unit'),capacity_period:first(p,'capacity_period')===null?null:String(first(p,'capacity_period')),capacity_kind:first(p,'capacity_kind'),
+ throughput_value:numeric(first(p,'throughput_value')),throughput_unit:first(p,'throughput_unit'),throughput_period:first(p,'throughput_period')===null?null:String(first(p,'throughput_period')),throughput_kind:first(p,'throughput_kind'),
  capacity_source:first(p,'capacity_source'),throughput_source:first(p,'throughput_source'),capacity_product:first(p,'capacity_product'),throughput_product:first(p,'throughput_product'),
  capacity_standard_conditions:first(p,'capacity_standard_conditions'),throughput_standard_conditions:first(p,'throughput_standard_conditions'),
  density_kg_m3:numeric(first(p,'density_kg_m3')),density_source:first(p,'density_source'),
@@ -68,12 +68,16 @@ export function validatePipelineGeometry(g){
  for(const line of lines){if(line.length<2)throw Error('Pipeline line needs two points');for(const p of line)if(!Array.isArray(p)||p.length<2||!p.slice(0,2).every(Number.isFinite)||Math.abs(p[0])>180||Math.abs(p[1])>90)throw Error('Invalid WGS84 coordinate');}
 }
 const radians=x=>x*Math.PI/180;
+const geometryEdgeCache=new WeakMap();
 function distance(a,b){const dlat=radians(b[1]-a[1]),dlon=radians(b[0]-a[0]),h=Math.sin(dlat/2)**2+Math.cos(radians(a[1]))*Math.cos(radians(b[1]))*Math.sin(dlon/2)**2;return 6371.0088*2*Math.asin(Math.min(1,Math.sqrt(h)));}
 export function uniqueGeometryLength(records){
  const edges=new Set();let sum=0;
- for(const p of records)for(const line of geometryLines(p.geometry))for(let i=1;i<line.length;i++){
-   const a=line[i-1].slice(0,2),b=line[i].slice(0,2),key=[JSON.stringify(a),JSON.stringify(b)].sort().join('|');
-   if(!edges.has(key)){edges.add(key);sum+=distance(a,b);}
+ for(const p of records){
+  let cached=geometryEdgeCache.get(p.geometry);
+  if(!cached){cached=[];for(const line of geometryLines(p.geometry))for(let i=1;i<line.length;i++){
+    const a=line[i-1].slice(0,2),b=line[i].slice(0,2);cached.push([[JSON.stringify(a),JSON.stringify(b)].sort().join('|'),distance(a,b)]);
+  }geometryEdgeCache.set(p.geometry,cached);}
+  for(const [key,length] of cached)if(!edges.has(key)){edges.add(key);sum+=length;}
  }
  return sum;
 }
