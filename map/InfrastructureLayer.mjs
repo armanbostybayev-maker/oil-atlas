@@ -15,6 +15,19 @@ export const defaultInfrastructureVisibility = () => Object.fromEntries(
   INFRASTRUCTURE_TYPES.map(({ id }) => [id, false]),
 );
 export const emptyCollection = () => ({ type: "FeatureCollection", features: [] });
+/**
+ * Optional tile templates are explicitly configured at build time.
+ * Never infer a tile endpoint from an MBTiles filename.
+ */
+export function infrastructureTileConfig(type, env = {}) {
+  if (!["oil", "gas"].includes(type)) return null;
+  const raw = type === "oil" ? env.VITE_OIL_PIPELINE_TILES : env.VITE_GAS_PIPELINE_TILES;
+  if (!raw || typeof raw !== "string") return null;
+  const url = raw.trim();
+  if (!/^https:\/\//i.test(url) && !/^\/[^/]/.test(url)) return null;
+  if (!url.includes("{z}") || !url.includes("{x}") || !url.includes("{y}")) return null;
+  return { type: "vector", tiles: [url], minzoom: 0, maxzoom: 12, attribution: "Pipeline data: see infrastructure panel" };
+}
 const safeValue = (value) => value == null || value === "" ? "—" : String(value);
 
 export function validateInfrastructureCollection(data, type) {
@@ -67,7 +80,7 @@ export function createInfrastructureCard(type, properties = {}) {
 }
 
 export class InfrastructureLayer {
-  constructor(map, { onSelect = () => {}, onCounts = () => {}, onError = () => {} } = {}) {
+  constructor(map, { onSelect = () => {}, onCounts = () => {}, onError = () => {}, tileEnv = {} } = {}) {
     this.map = map;
     this.onSelect = onSelect;
     this.onCounts = onCounts;
@@ -77,13 +90,17 @@ export class InfrastructureLayer {
     this.pending = new Map();
     this.counts = Object.fromEntries(INFRASTRUCTURE_TYPES.map(({ id }) => [id, null]));
     this.abort = new AbortController();
+    this.tileTypes = new Set();
     for (const item of INFRASTRUCTURE_TYPES) {
       const source = `infrastructure-${item.id}`;
       const layer = `${source}-layer`;
-      map.addSource(source, { type: "geojson", data: emptyCollection() });
+      const tile = infrastructureTileConfig(item.id, tileEnv);
+      if (tile) this.tileTypes.add(item.id);
+      map.addSource(source, tile || { type: "geojson", data: emptyCollection() });
       if (item.geometry === "line") {
         map.addLayer({
           id: layer, type: "line", source,
+          ...(tile ? { "source-layer": `infrastructure_${item.id}` } : {}),
           layout: { visibility: "none", "line-cap": "round", "line-join": "round" },
           paint: {
             "line-color": item.color,
@@ -115,6 +132,11 @@ export class InfrastructureLayer {
     this.visible[type] = Boolean(enabled);
     this.map.setLayoutProperty(`infrastructure-${type}-layer`, "visibility", enabled ? "visible" : "none");
     if (!enabled || this.loaded.has(type)) return;
+    if (this.tileTypes.has(type)) {
+      this.loaded.add(type);
+      this.onCounts({ ...this.counts });
+      return;
+    }
     if (this.pending.has(type)) return this.pending.get(type);
     const request = (async () => {
       try {
