@@ -20,6 +20,8 @@ import { MODES, CLASSES, ANOMALIES } from "../analytics/config.mjs";
 import { colorScale } from "../map/layers.mjs";
 import { loadTankers } from "../map/TankerLayer.mjs";
 import VesselTypes from "../panels/VesselTypes.jsx";
+import InfrastructureControls from "../controls/InfrastructureControls.jsx";
+import { defaultInfrastructureVisibility } from "../map/InfrastructureLayer.mjs";
 import {
   ALL_VESSEL_TYPES,
   normalizeFleet,
@@ -41,6 +43,9 @@ export function createAtlasApp({
     const onViewportChange = useCallback(viewport => { mapViewport.current = viewport; }, []);
     const [help, setHelp] = useState(null);
     const closeHelp = useCallback(() => setHelp(null), []);
+    const [infrastructureVisibility, setInfrastructureVisibility] = useState(defaultInfrastructureVisibility);
+    const [infrastructureCounts, setInfrastructureCounts] = useState({});
+    const [infrastructureError, setInfrastructureError] = useState("");
     const [tankers, setTankers] = useState([]);
     const [tankersEnabled, setTankersEnabled] = useState(true);
     const [selectedVesselTypes, setSelectedVesselTypes] =
@@ -273,6 +278,9 @@ export function createAtlasApp({
           tankers={fleet}
           tankersEnabled={tankersEnabled}
           selectedVesselTypes={selectedVesselTypes}
+          infrastructureVisibility={infrastructureVisibility}
+          onInfrastructureCounts={setInfrastructureCounts}
+          onInfrastructureError={setInfrastructureError}
         />
 
         <MapOverlayLayout
@@ -307,6 +315,15 @@ export function createAtlasApp({
           onSelect={owner}
           onHover={setHoverOwner}
         />
+            <InfrastructureControls
+              visibility={infrastructureVisibility}
+              onChange={(type, enabled) => {
+                setInfrastructureError("");
+                setInfrastructureVisibility(current => ({ ...current, [type]: enabled }));
+              }}
+              counts={infrastructureCounts}
+              error={infrastructureError}
+            />
             <VesselTypes
               selected={selectedVesselTypes}
               onChange={setSelectedVesselTypes}
