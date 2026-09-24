@@ -1,0 +1,13 @@
+.infrastructure-controls { width: 345.8px; max-width: calc(100vw - 35px); padding: 14px 18px; }
+.infrastructure-controls header { font-size: 16px; }
+.infrastructure-controls p { font-size: 12px; line-height: 1.45; color: var(--muted); margin: 7px 0 10px; }
+.infrastructure-controls .infrastructure-options { display: grid; gap: 2px; }
+.infrastructure-controls label { display: flex; align-items: center; gap: 9px; font-size: 13px; min-height: 30px; cursor: pointer; }
+.infrastructure-controls input { min-height: auto; width: 15px; height: 15px; flex: none; accent-color: #23768b; }
+.infrastructure-controls .infrastructure-swatch { width: 11px; height: 11px; flex: none; border-radius: 3px; }
+.infrastructure-controls label span:nth-of-type(2) { flex: 1; }
+.infrastructure-controls label small { font-size: 11px; }
+.infrastructure-controls > small { font-size: 11px; line-height: 1.4; }
+.infrastructure-controls .infrastructure-error { color: #ad403d; margin: 8px 0; }
+.infrastructure-popup { display: grid; gap: 5px; font-size: 13px; }
+.infrastructure-popup strong { font-size: 16px; }
