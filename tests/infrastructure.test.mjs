@@ -33,3 +33,13 @@ test("import rejects invalid geographic coordinates", () => {
     type: "Feature", geometry: { type: "LineString", coordinates: [[181, 2], [3, 4]] }, properties: {}
   }] }, metadata), /Invalid WGS84/);
 });
+
+test("separate segments sharing a project ID are not discarded", () => {
+  const segment = coordinates => ({ type: "Feature", geometry: { type: "LineString", coordinates }, properties: { "GEM ID": "shared" } });
+  const result = normalizeCollection({ type: "FeatureCollection", features: [
+    segment([[1, 2], [3, 4]]), segment([[5, 6], [7, 8]])
+  ] }, metadata);
+  assert.equal(result.features.length, 2);
+  assert.equal(result.features[0].properties.id, "shared");
+  assert.equal(result.features[1].properties.id, "shared");
+});
