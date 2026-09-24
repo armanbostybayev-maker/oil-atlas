@@ -8,7 +8,7 @@ The committed GeoJSON files are **empty placeholders**. They do not constitute w
 2. **Gas transmission pipelines:** GEM, Global Gas Infrastructure Tracker (GGIT): https://globalenergymonitor.org/projects/global-gas-infrastructure-tracker/ . Request the GeoJSON GIS routes via the download form.
 3. **Fields:** GEM, Global Oil and Gas Extraction Tracker (GOGET): https://globalenergymonitor.org/projects/global-oil-gas-extraction-tracker/ . Import point coordinates only when their accuracy is recorded. Country-level placeholders are not exact field sites.
 
-Read the terms supplied with each downloaded release. Preserve attribution and licence information. The dataset release date is **not** the date you downloaded it. Avoid adding raw workbooks or private contact information to the repository.
+Read the terms supplied with each downloaded release. Preserve attribution and licence information. The dataset release date is **not** the date you downloaded it and is **not** the date of an individual source record. The importer stores these separately as `source_release` and `source_date`. Avoid adding raw workbooks or private contact information to the repository.
 
 ## Import commands
 
