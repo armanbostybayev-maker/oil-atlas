@@ -11,6 +11,7 @@ export default function usePipelines(enabled){
  const importFile=useCallback(async(file,type)=>{if(!file)return;setLoading(true);setError('');try{if(file.size>50*1024*1024)throw Error('Файл превышает 50 МБ');const rows=pipelineRecords(JSON.parse(await file.text()),type);setLocal(true);setDatasets(prev=>({...prev,[type]:rows}));setSelected(null);setCompare([]);}catch(e){setError(e.message);}finally{setLoading(false);}},[]);
  const records=useMemo(()=>[...datasets.oil,...datasets.gas],[datasets]);
  const filtered=useMemo(()=>filterPipelines(records,filters),[records,filters]);
+ useEffect(()=>{if(selected&&!filtered.some(p=>p.id===selected))setSelected(null);},[filtered,selected]);
  const summary=useMemo(()=>pipelineSummary(filtered),[filtered]);
  const select=useCallback(id=>setSelected(id),[]);
  return {records,filtered,summary,filters,setFilters,selected,select,compare,setCompare,color,setColor,loading,error,local,importFile,retry:()=>retry(x=>x+1)};
