@@ -26,6 +26,8 @@ test("import preserves geometry and provenance and normalizes fields", () => {
   assert.equal(result.features[0].properties.name, "Example");
   assert.equal(result.features[0].properties.length_km, 12.5);
   assert.equal(result.features[0].properties.source, "Test source");
+  assert.equal(result.features[0].properties.source_date, null);
+  assert.equal(result.features[0].properties.source_release, "2026-09");
   assert.equal(result.features[0].properties.geometry_accuracy, "approximate");
 });
 test("import rejects invalid geographic coordinates", () => {
