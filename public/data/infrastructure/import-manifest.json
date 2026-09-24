@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "generated_on": "2026-09-24",
+  "status": "prepared_not_published",
+  "datasets": [
+    {
+      "type": "oil",
+      "file": "oil-pipelines.geojson",
+      "features": 1468,
+      "sha256": "016d797b9c449181aa5cddb448d356f7fafae3d6523e29c29b9b55403bd61da8",
+      "source": "Global Oil Infrastructure Tracker, Global Energy Monitor",
+      "source_url": "https://globalenergymonitor.org/projects/global-oil-infrastructure-tracker/",
+      "source_release": null
+    },
+    {
+      "type": "gas",
+      "file": "gas-pipelines.geojson",
+      "features": 2933,
+      "sha256": "d9c55f933f02dac119b13718f8601336d83551453286dadf7fa883c44e62838b",
+      "source": "Global Gas Infrastructure Tracker, Global Energy Monitor",
+      "source_url": "https://globalenergymonitor.org/projects/global-gas-infrastructure-tracker/",
+      "source_release": null,
+      "missing_source_dates": 12
+    }
+  ],
+  "note": "Hashes identify the prepared archive members, not the empty GeoJSON placeholders in this branch. Confirm redistribution terms and source release before deployment."
+}
