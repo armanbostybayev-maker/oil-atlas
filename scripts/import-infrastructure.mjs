@@ -54,21 +54,21 @@ function checkCoordinates(coordinates) {
 export function normalizeCollection(data, { type, source, sourceUrl, release, accuracy }) {
   validateInfrastructureCollection(data, type);
   if (!source || !/^https:\/\//.test(sourceUrl || "") || !release) throw new Error("Source, HTTPS source URL and release are required");
-  const features = [], seen = new Set();
+  const features = [];
   for (const feature of data.features) {
     checkCoordinates(feature.geometry.coordinates);
     const input = feature.properties || {};
     const props = Object.fromEntries(Object.entries(alias).map(([key, keys]) => [key, first(input, keys)]));
     const id = props.id == null ? null : String(props.id);
-    if (id && seen.has(id)) continue;
-    if (id) seen.add(id);
+    // A project may have multiple route segments sharing one project ID.
+    // Preserve every segment and retain the source ID in properties.
     const length = Number(props.length_km);
     props.length_km = props.length_km != null && Number.isFinite(length) && length >= 0 ? length : null;
     props.geometry_accuracy = props.geometry_accuracy || accuracy || "unknown";
     props.source = source;
     props.source_url = sourceUrl;
     props.source_date = release;
-    features.push({ type: "Feature", ...(id ? { id } : {}), geometry: feature.geometry, properties: props });
+    features.push({ type: "Feature", geometry: feature.geometry, properties: props });
   }
   return { type: "FeatureCollection", features };
 }
