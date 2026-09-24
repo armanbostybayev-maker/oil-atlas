@@ -17,5 +17,6 @@ export default function InfrastructureControls({ visibility, onChange, counts, e
     </div>
     {error && <small className="infrastructure-error" role="status">{error}</small>}
     <small>{t("Empty layers are placeholders until verified datasets are imported.")}</small>
+    <small className="infrastructure-attribution">Data sources: <a href="https://globalenergymonitor.org/projects/global-oil-infrastructure-tracker/" target="_blank" rel="noopener noreferrer">GEM oil tracker</a> · <a href="https://globalenergymonitor.org/projects/global-gas-infrastructure-tracker/" target="_blank" rel="noopener noreferrer">GEM gas tracker</a>. Attribution applies to imported data only; check each feature’s source and release. Routes may be approximate.</small>
   </section>;
 }
