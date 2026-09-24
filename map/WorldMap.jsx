@@ -229,6 +229,7 @@ export default function WorldMap({
         },
         onCounts: counts => live.current.onInfrastructureCounts?.(counts),
         onError: error => live.current.onInfrastructureError?.(error),
+        tileEnv: import.meta.env,
       });
       setReady(true);
       onReady?.(instance);
