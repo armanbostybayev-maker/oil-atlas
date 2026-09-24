@@ -59,7 +59,7 @@ export function normalizeCollection(data, { type, source, sourceUrl, release, ac
   for (const feature of data.features) {
     checkCoordinates(feature.geometry.coordinates);
     const input = feature.properties || {};
-    const props = Object.fromEntries(Object.entries(alias).map(([key, keys]) => [key, first(input, keys)]));
+    const props = { ...input, ...Object.fromEntries(Object.entries(alias).map(([key, keys]) => [key, first(input, keys)])), original_properties: structuredClone(input) };
     const id = props.id == null ? null : String(props.id);
     // A project may have multiple route segments sharing one project ID.
     // Preserve every segment and retain the source ID in properties.
