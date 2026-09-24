@@ -9,6 +9,7 @@
 import { spawnSync } from "node:child_process";
 import { readFile, mkdir, stat } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { INFRASTRUCTURE_TYPES, validateInfrastructureCollection } from "../map/InfrastructureLayer.mjs";
 
 export const tileLayerName = type => {
@@ -45,6 +46,6 @@ async function main() {
   console.log(`${options.type}: ${data.features.length} source features; ${(await stat(output)).size} MBTiles bytes`);
   console.log("Tiles remain local. Do not serve or publish without redistribution approval.");
 }
-if (process.argv[1] && resolve(process.argv[1]) === new URL(import.meta.url).pathname) {
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch(error => { console.error(error.message); process.exitCode = 1; });
 }
