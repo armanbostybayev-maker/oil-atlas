@@ -8,7 +8,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { readFile, mkdir, stat } from "node:fs/promises";
-import { dirname, relative, resolve, isAbsolute } from "node:path";
+import { dirname, relative, resolve, isAbsolute, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { INFRASTRUCTURE_TYPES, validateInfrastructureCollection } from "../map/InfrastructureLayer.mjs";
 
@@ -16,12 +16,12 @@ export const tileLayerName = type => {
   if (!INFRASTRUCTURE_TYPES.some(item => item.id === type)) throw new Error("Unknown infrastructure type");
   return `infrastructure_${type}`;
 };
-export function assertPrivateTileOutput(output, root = resolve(new URL("../", import.meta.url).pathname)) {
+export function assertPrivateTileOutput(output, root = resolve(dirname(fileURLToPath(import.meta.url)), "..")) {
   if (!output) throw new Error("--output is required");
   const target = resolve(output);
   const publicDir = resolve(root, "public");
   const withinPublic = relative(publicDir, target);
-  if (withinPublic === "" || (withinPublic !== ".." && !withinPublic.startsWith(`..${process.platform === "win32" ? "\\\\" : "/"}`) && !isAbsolute(withinPublic))) {
+  if (withinPublic === "" || (withinPublic !== ".." && !withinPublic.startsWith(`..${sep}`) && !isAbsolute(withinPublic))) {
     throw new Error("Refusing to write unapproved tiles under public/");
   }
   return target;
