@@ -1,7 +1,7 @@
 export const PIPELINE_STATUSES=['operating','construction','proposed','idle','retired','unknown'];
 export const PIPELINE_PRODUCTS=['oil','gas','condensate','products','other'];
 export const PIPELINE_DEFAULTS={query:'',product:'',status:'',country:'',capacityMin:'',capacityMax:'',unit:'',group:'',utilizationMin:'',utilizationMax:'',yearMin:'',yearMax:''};
-export const numeric=v=>v!==null&&v!==undefined&&String(v).trim()!==''&&Number.isFinite(Number(v))&&Number(v)>=0?Number(v):null;
+export const numeric=v=>['number','string'].includes(typeof v)&&String(v).trim()!==''&&Number.isFinite(Number(v))&&Number(v)>=0?Number(v):null;
 const first=(p,...keys)=>keys.map(k=>p[k]).find(v=>v!==null&&v!==undefined&&v!=='')??null;
 const list=v=>[...new Set((Array.isArray(v)?v:String(v??'').split(';')).map(x=>String(x).trim()).filter(Boolean))];
 export function safePipelineUrl(v){try{const u=new URL(v);return ['http:','https:'].includes(u.protocol)&&!u.username&&!u.password?u.href:null;}catch{return null;}}
@@ -102,7 +102,7 @@ export function filterPipelines(records,f=PIPELINE_DEFAULTS){
   // A numeric capacity threshold without a unit would compare unrelated dimensions.
   ((f.capacityMin===''&&f.capacityMax==='')||!!f.unit)&&range(p.capacity_normalized,f.capacityMin,f.capacityMax)&&range(p.utilization_pct,f.utilizationMin,f.utilizationMax)&&range(p.commissioning_year,f.yearMin,f.yearMax));
 }
-export function pipelineGroupKey(p){return [p.product,p.capacity_normalized_unit||p.capacity_unit||'unknown',p.capacity_period||'unknown',p.capacity_kind||'unknown',p.capacity_standard_conditions||''].join(' · ');}
+export function pipelineGroupKey(p){return [p.product,p.capacity_normalized_unit||p.capacity_unit||'unknown',p.capacity_period||'unknown',p.capacity_kind||'unknown',p.capacity_standard_conditions||(p.product==='gas'?`unknown conditions (${p.id})`:'')].join(' · ');}
 export function pipelineSummary(records){
  const unique=[...new Map(records.map(p=>[p.id,p])).values()],known=unique.filter(p=>p.capacity_normalized!==null),observed=unique.filter(p=>p.utilization_pct!==null);
  const counts=key=>Object.fromEntries([...new Set(unique.map(p=>p[key]||'unknown'))].map(v=>[v,unique.filter(p=>(p[key]||'unknown')===v).length]));

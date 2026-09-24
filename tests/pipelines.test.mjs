@@ -9,6 +9,7 @@ test('source properties are separate; absent is null while measured zero is reta
  assert.equal(measured({throughput_value:0}).utilization_pct,0);
  assert.equal(normalizePipeline(feature({fuel:'NGL'})).product,'other');
  assert.equal(normalizePipeline(feature({Owner:'Owner only'})).operator,null);
+ assert.equal(normalizePipeline(feature({capacity_value:false})).capacity_value,null);
  assert.equal(measured({capacity_period:2024,throughput_period:'2024'}).utilization_pct,120);
 });
 test('units retain case and density conversions require documentation and a calendar year',()=>{
@@ -36,6 +37,7 @@ test('gas comparison refuses unknown or incompatible standard conditions',()=>{
  assert.equal(measured(raw).utilization_pct,null);
  assert.equal(measured({...raw,capacity_standard_conditions:'15C,101.325kPa',throughput_standard_conditions:'15C,101.325kPa'}).utilization_pct,50);
  assert.equal(measured({...raw,capacity_standard_conditions:'0C',throughput_standard_conditions:'15C'}).utilization_pct,null);
+ assert.equal(pipelineSummary([measured({...raw,source_id:'gas-a'}),measured({...raw,source_id:'gas-b'})]).capacityGroups.length,2);
 });
 test('segments and countries deduplicate without summing project capacity',()=>{
  const fc={type:'FeatureCollection',features:[feature({capacity_value:1,capacity_unit:'kbbl/d'}),feature({capacity_value:1,capacity_unit:'kbbl/d'},[[1,0],[0,0]])]};
