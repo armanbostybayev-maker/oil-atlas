@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { join, resolve } from "node:path";
 import { INFRASTRUCTURE_TYPES, validateInfrastructureCollection } from "../map/InfrastructureLayer.mjs";
 import { publicationIssues } from "./infrastructure-publication-gate.mjs";
+import { scanPublicTileFiles } from "./check-public-tiles.mjs";
 
 const dir = fileURLToPath(new URL("../public/data/infrastructure/", import.meta.url));
 const names = {
@@ -47,6 +48,16 @@ try {
   }
 } catch (error) {
   console.error(`Publication gate: ${error.message}`);
+  failures++;
+}
+try {
+  const forbidden = await scanPublicTileFiles(fileURLToPath(new URL("../public/", import.meta.url)));
+  for (const path of forbidden) {
+    console.error(`Public tile archive forbidden: ${path}`);
+    failures++;
+  }
+} catch (error) {
+  console.error(`Public tile scan: ${error.message}`);
   failures++;
 }
 if (failures) process.exitCode = 1;
