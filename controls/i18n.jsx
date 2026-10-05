@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { ru } from "./ru.mjs";
+import { oilfieldsRu } from './oilfields-ru.mjs';
 let language = (() => {
   try {
     return localStorage.getItem("oil-atlas-language") === "ru" ? "ru" : "en";
@@ -31,6 +32,7 @@ const escape = (s) =>
   Array.from(s, (c) => ("\\^$.*+?()[]{}|".includes(c) ? "\\" + c : c)).join("");
 const fragments = new RegExp(
   Object.keys(ru)
+    .filter(key => !Object.hasOwn(oilfieldsRu,key))
     .sort((a, b) => b.length - a.length)
     .map(escape)
     .join("|"),

@@ -98,13 +98,13 @@ test("duplicate warnings and zero denominators suppress derived certainty", () =
     null,
   );
 });
-test("real dataset conservation and missing price coverage", () => {
+test("real dataset conservation and current price coverage", () => {
   const data = JSON.parse(
       fs.readFileSync(new URL("../public/data/atlas.json", import.meta.url)),
     ),
     a = createAnalytics(data);
-  assert.equal(data.refineries.length, 658);
-  assert.equal(data.quality.matched + data.quality.unmatched.length, 658);
+  assert.ok(data.refineries.length > 0);
+  assert.equal(data.quality.matched + data.quality.unmatched.length, data.refineries.length);
   assert.equal(
     a.stats.reduce((s, c) => s + c.count, 0),
     data.quality.matched,
@@ -117,7 +117,10 @@ test("real dataset conservation and missing price coverage", () => {
       a.stats.reduce((s, c) => s + (c.capacity ?? 0) * 1e6, 0) - matched,
     ) < 0.01,
   );
-  assert.equal(a.getDataCoverage("gasolinePrice").known, 0);
+  const known = data.countries.filter(c => Number.isFinite(c.values.gasolinePrice));
+  assert.ok(known.length > 0);
+  assert.equal(a.getDataCoverage("gasolinePrice").known, known.length);
+  assert.ok(data.countries.some(c => c.values.gasolinePrice === null));
   for (const c of a.stats) {
     if (!c.completeCapacity) assert.equal(c.rcRatio, null);
     if (c.completeCapacity && c.consumption > 0)

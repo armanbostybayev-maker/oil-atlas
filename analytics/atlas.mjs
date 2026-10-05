@@ -1,4 +1,5 @@
 import { finite, sum, mean, quantile, ratio } from "../utils/numbers.mjs";
+import { JODI_METRICS } from '../data/jodi.mjs';
 import { TONNES_YEAR_TO_BPD } from "../data/normalize.mjs";
 import { CLASSIFICATION as RULES, PRODUCTS, ANOMALIES } from "./config.mjs";
 export function aggregate(rows) {
@@ -250,6 +251,7 @@ export function metricValue(c, state, filteredRows) {
   return c[state.metric] ?? null;
 }
 export function metricYear(c, metric) {
+  if (Object.hasOwn(JODI_METRICS,metric)) return c.years[metric] ? `${c.years[metric]} · ${c.sources?.[metric]?.source || 'JODI-Oil'}${c.sources?.[metric]?.months ? ' · 12/12' : ''}` : 'No complete year (2021–2025)';
   if (c.years[metric]) return String(c.years[metric]);
   if (metric.endsWith("Price")) return c.priceDate || "Date unavailable";
   if (metric === "pcRatio" || metric === "classification")

@@ -1,0 +1,114 @@
+{
+  "retrievedAt": "2026-09-23",
+  "years": [
+    2025,
+    2024,
+    2023,
+    2022,
+    2021
+  ],
+  "files": [
+    {
+      "file": "data/sources/jodi/primary-2025.csv",
+      "sourceUrl": "https://www.jodidata.org/_resources/files/downloads/oil-data/annual-csv/primary/2025.csv",
+      "sha256": "5726e6e7319bbb72cf051b2bbdb3ea436ae32a3e0370cea60e04f9472e54870b"
+    },
+    {
+      "file": "data/sources/jodi/secondary-2025.csv",
+      "sourceUrl": "https://www.jodidata.org/_resources/files/downloads/oil-data/annual-csv/secondary/2025.csv",
+      "sha256": "2b1007ee1010a283e30052a0dee5e9ecf8eb458310791bdeb0a62af2563fe459"
+    },
+    {
+      "file": "data/sources/jodi/primary-2024.csv",
+      "sourceUrl": "https://www.jodidata.org/_resources/files/downloads/oil-data/annual-csv/primary/2024.csv",
+      "sha256": "99ffe47ceee11220b16a98c2a66987881b760f1d88f1fe9caa8e62bb9282b6ff"
+    },
+    {
+      "file": "data/sources/jodi/secondary-2024.csv",
+      "sourceUrl": "https://www.jodidata.org/_resources/files/downloads/oil-data/annual-csv/secondary/2024.csv",
+      "sha256": "a6f6d90bb498b27d8b72ddcc79e482e18504084150d9cca719c0d0ccb435d280"
+    },
+    {
+      "file": "data/sources/jodi/primary-2023.csv",
+      "sourceUrl": "https://www.jodidata.org/_resources/files/downloads/oil-data/annual-csv/primary/2023.csv",
+      "sha256": "34f170c90f39ec05850a8beee7aa196b83231fa5360662d02737deec0e75d26e"
+    },
+    {
+      "file": "data/sources/jodi/secondary-2023.csv",
+      "sourceUrl": "https://www.jodidata.org/_resources/files/downloads/oil-data/annual-csv/secondary/2023.csv",
+      "sha256": "58a394d7a1a9276bef36533f6f1e43e642c749cb583afb9d1e226ecf27770cf8"
+    },
+    {
+      "file": "data/sources/jodi/primary-2022.csv",
+      "sourceUrl": "https://www.jodidata.org/_resources/files/downloads/oil-data/annual-csv/primary/2022.csv",
+      "sha256": "e0263b8a33248b154d6d3362de10a6bd7fe2a1f633e62359651c1ac474b86e68"
+    },
+    {
+      "file": "data/sources/jodi/secondary-2022.csv",
+      "sourceUrl": "https://www.jodidata.org/_resources/files/downloads/oil-data/annual-csv/secondary/2022.csv",
+      "sha256": "c4d588151e533fa8c20d476c81ea7d0e18cec5ea062d86cb57a4dcf94d6cdfb2"
+    },
+    {
+      "file": "data/sources/jodi/primary-2021.csv",
+      "sourceUrl": "https://www.jodidata.org/_resources/files/downloads/oil-data/annual-csv/primary/2021.csv",
+      "sha256": "5af388bfe0e5f0c443651875c4e6186482cdcbda487172b2898c303d21f36248"
+    },
+    {
+      "file": "data/sources/jodi/secondary-2021.csv",
+      "sourceUrl": "https://www.jodidata.org/_resources/files/downloads/oil-data/annual-csv/secondary/2021.csv",
+      "sha256": "aebdb99e88841fe6b72354690a291f51daf1ab0b3e53c907d14fb75d1a498b9a"
+    }
+  ],
+  "coverage": {
+    "crudeExports": 75,
+    "productExports": 82,
+    "crudeImports": 69,
+    "productImports": 80,
+    "crudeIntake": 69,
+    "productDemand": 72,
+    "gasolineDemand": 72,
+    "dieselDemand": 74,
+    "lpgDemand": 74,
+    "jetDemand": 63,
+    "residualDemand": 72,
+    "naphthaDemand": 56
+  },
+  "unmatched": [
+    "Dhekelia Cantonment",
+    "Somaliland",
+    "Saint Martin",
+    "Guantanamo Bay Naval Base",
+    "Brazilian Island",
+    "Turkish Republic of Northern Cyprus",
+    "United Nations Buffer Zone in Cyprus",
+    "Siachen Glacier",
+    "Baikonur",
+    "Akrotiri Sovereign Base Area",
+    "Southern Patagonian Ice Field",
+    "Bir Tawil",
+    "Turks and Caicos Islands",
+    "Saint Pierre and Miquelon",
+    "French Southern and Antarctic Lands",
+    "Saint Vincent and the Grenadines",
+    "Saint Lucia",
+    "United States Minor Outlying Islands",
+    "Antigua and Barbuda",
+    "Saint Kitts and Nevis",
+    "United States Virgin Islands",
+    "Saint Barthélemy",
+    "Heard Island and McDonald Islands",
+    "Saint Helena",
+    "São Tomé and Príncipe",
+    "Åland",
+    "Australian Indian Ocean Territories",
+    "Wallis and Futuna",
+    "Federated States of Micronesia",
+    "South Georgia and the South Sandwich Islands",
+    "Coral Sea Islands",
+    "Wake Island",
+    "Ashmore and Cartier Islands",
+    "Bajo Nuevo Bank",
+    "Serranilla Bank",
+    "Scarborough Shoal"
+  ]
+}

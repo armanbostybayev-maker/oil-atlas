@@ -3,9 +3,11 @@ import React from "react";
 import { format, text } from "../utils/numbers.mjs";
 import { PRODUCTS } from "../analytics/config.mjs";
 import { metricYear } from "../analytics/atlas.mjs";
+import { JODI_METRICS } from '../data/jodi.mjs';
 export const COUNTRY_METRICS = [
   ["production", "Oil production", "bbl/day"],
   ["consumption", "Consumption", "bbl/day"],
+  ...Object.entries(JODI_METRICS).map(([key,v])=>[key,v[3],'bbl/day']),
   ["crude", "Crude oil", "bbl/day"],
   ["ngpl", "NGPL", "bbl/day"],
   ["capacity", "Known recorded capacity", "Mt/year"],
@@ -239,6 +241,7 @@ export default function Details({
               <dt>
                 {t(label)}
                 <small>{t(metricYear(country, k))}</small>
+                {country.sources?.[k]?.sourceUrl && <small><a href={country.sources[k].sourceUrl} target="_blank" rel="noopener noreferrer">{country.sources[k].source} ↗</a>{country.sources[k].assessment && <> · {t('Assessment codes')}: {country.sources[k].assessment.join(', ')}</>}{country.sources[k].table && <> · {country.sources[k].table}</>}</small>}
               </dt>
               <dd>
                 {t(format(country[k]))}
@@ -254,6 +257,8 @@ export default function Details({
           )),
         )}
       </dl>
+      <p className="muted">{t('JODI uses the latest complete year in 2021–2025; years may differ. Missing data is not zero. Codes: 1 comparable, 2 use with caution, 3 not assessed. Crude refinery intake is processing, not final consumption. Product demand includes fuels and non-fuel uses; jet fuel is part of kerosenes.')}</p>
+      <p className="muted">{t('Export gaps use OPEC ASB 2025 (2024 data); the newer annual observation wins, with JODI preferred on equal years. OPEC may include condensate, transit and re-exports.')}</p>
       <ProductMix country={country} />
       {t(
         country.anomalies.length > 0 && (

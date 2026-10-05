@@ -1,31 +1,31 @@
 ﻿import http from "http";
 import WebSocket from "ws";
+import { pathToFileURL } from "node:url";
+import { normalizeVesselType } from '../map/vessel-types.mjs';
 
 const AIS_URL = "wss://stream.aisstream.io/v0/stream";
-const PORT = Number(process.env.PORT || 8787);
-const API_KEY = process.env.AISSTREAM_API_KEY;
+export function createCollector({apiKey = process.env.AISSTREAM_API_KEY, port = Number(process.env.PORT || 8787), host = '0.0.0.0', WebSocketImpl = WebSocket, now = Date.now, staleMs = 30 * 60 * 1000, streamStaleMs = Number(process.env.AIS_STREAM_STALE_MS || 60000), cleanupMs = 60000, reconnectMs = 5000} = {}) {
+const API_KEY = apiKey;
+for (const value of [staleMs,streamStaleMs,cleanupMs,reconnectMs]) if (!Number.isFinite(value) || value <= 0) throw new Error('AIS TTL/interval values must be positive numbers');
+let connected = false, lastMessageAt = null, lastPositionAt = null;
+let socket, reconnectTimer, cleanupTimer, stopped = false;
 
-// Пока используем проверенный тестовый район Miami.
+// Global coverage; tanker filtering happens after static data arrives.
 const BOUNDS = [
-  [[-90, -180], [90, 180]],
-  [[20, 47], [31, 63]]
+  [[-90, -180], [90, 180]]
 ];
 
 const vessels = new Map();
 const staticData = new Map();
 
 const MAX_HISTORY = 120;
-const RECONNECT_MS = 5000;
-const STALE_MS = 30 * 60 * 1000;
+const RECONNECT_MS = reconnectMs;
+const STALE_MS = staleMs;
 
 function cleanText(value) {
   return String(value ?? "").trim();
 }
 
-function isTanker(type) {
-  const n = Number(type);
-  return Number.isFinite(n) && n >= 80 && n <= 89;
-}
 function tankerTypeName(type) {
   const n = Number(type);
 
@@ -65,21 +65,6 @@ function navigationStatusName(status) {
   return names[n] || "Unknown";
 }
 
-function inferTankerSubtype(vessel) {
-  const searchable = [
-    vessel.name,
-    vessel.destination
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toUpperCase();
-
-  if (/\bFPSO\b|\bFSO\b/.test(searchable)) {
-    return "Floating Storage/Production";
-  }
-
-  return "Tanker";
-}
 
 function getMmsi(event, report) {
   return String(
@@ -131,6 +116,7 @@ function updateStatic(event) {
           : previous.draught,
       staticUpdatedAt:
         event?.MetaData?.time_utc || new Date().toISOString(),
+      receivedAt: now(),
     };
 
     staticData.set(mmsi, next);
@@ -154,6 +140,7 @@ function updateStatic(event) {
       mmsi,
       staticUpdatedAt:
         event?.MetaData?.time_utc || new Date().toISOString(),
+      receivedAt: now(),
     };
 
     if (reportA?.Valid) {
@@ -306,22 +293,52 @@ function updatePosition(event) {
       previous.draught ??
       null,
     timestamp,
-    receivedAt: Date.now(),
+    receivedAt: now(),
     history,
     sourceMessageType: messageType,
   });
+  lastPositionAt = now();
 }
 
 function removeStaleVessels() {
-  const now = Date.now();
+  const currentTime = now();
 
   for (const [mmsi, vessel] of vessels) {
     if (
-      vessel.receivedAt &&
-      now - vessel.receivedAt > STALE_MS
+      currentTime - vessel.receivedAt > STALE_MS
     ) {
       vessels.delete(mmsi);
     }
+  }
+  for (const [mmsi, info] of staticData) {
+    const lastSeen = Math.max(info.receivedAt, vessels.get(mmsi)?.receivedAt ?? 0);
+    if (currentTime-lastSeen > STALE_MS) staticData.delete(mmsi);
+  }
+}
+
+function health() {
+  const ageSeconds = lastMessageAt === null ? null : Math.max(0,(now()-lastMessageAt)/1000);
+  const positionAgeSeconds = lastPositionAt === null ? null : Math.max(0,(now()-lastPositionAt)/1000);
+  return {
+    ok: connected && ageSeconds !== null && ageSeconds*1000 <= streamStaleMs && positionAgeSeconds !== null && positionAgeSeconds*1000 <= streamStaleMs,
+    connected, lastMessageAt:lastMessageAt === null ? null : new Date(lastMessageAt).toISOString(),
+    lastPositionAt:lastPositionAt === null ? null : new Date(lastPositionAt).toISOString(),
+    ageSeconds, positionAgeSeconds, staleAfterSeconds:streamStaleMs/1000,
+    vessels:vessels.size, vesselCount:vessels.size, staticRecords:staticData.size,
+    tankers:[...vessels.values()].filter(v => normalizeVesselType(v)).length,
+    timestamp:new Date(now()).toISOString(),
+  };
+}
+
+function ingest(event) {
+  if (['ShipStaticData','StaticDataReport'].includes(event?.MessageType)) {
+    if (!event.Message?.[event.MessageType]) return;
+    updateStatic(event);
+    lastMessageAt = now();
+  } else if (['PositionReport','StandardClassBPositionReport','ExtendedClassBPositionReport'].includes(event?.MessageType)) {
+    if (!event.Message?.[event.MessageType]) return;
+    updatePosition(event);
+    lastMessageAt = now();
   }
 }
 
@@ -329,13 +346,14 @@ function getTankers() {
   removeStaleVessels();
 
   return [...vessels.values()]
-    .filter(vessel => isTanker(vessel.vesselType))
-    .map(vessel => ({
-      ...vessel,
-      vesselTypeName: tankerTypeName(vessel.vesselType),
-      vesselSubtype: inferTankerSubtype(vessel),
-      status: vessel.navigationStatus || ""
-    }))
+    .flatMap(vessel => {
+      const type = normalizeVesselType(vessel);
+      return type ? [{
+        ...vessel, ...type,
+        vesselTypeName: vessel.vesselTypeName || tankerTypeName(vessel.vesselType),
+        status: vessel.navigationStatus || ""
+      }] : [];
+    })
     .sort((a, b) =>
       String(a.name || a.mmsi).localeCompare(
         String(b.name || b.mmsi)
@@ -344,13 +362,17 @@ function getTankers() {
 }
 
 function connect() {
+  if (stopped) return;
   console.log("Connecting to AISStream...");
 
-const socket = new WebSocket(AIS_URL, {
+socket = new WebSocketImpl(AIS_URL, {
   perMessageDeflate: true,
+  handshakeTimeout: 15000,
   });
 
   socket.on("open", () => {
+    if (stopped) { socket.terminate(); return; }
+    connected = true;
     console.log("AISStream connected");
 
     socket.send(JSON.stringify({
@@ -375,30 +397,27 @@ const socket = new WebSocket(AIS_URL, {
         return;
       }
 
-      if (
-        event.MessageType === "ShipStaticData" ||
-        event.MessageType === "StaticDataReport"
-      ) {
-        updateStatic(event);
-        return;
-      }
-
-      updatePosition(event);
+      ingest(event);
     } catch (error) {
       console.error("AIS message error:", error.message);
     }
   });
 
   socket.on("error", error => {
+    connected = false;
     console.error("AISStream error:", error.message);
+    socket.terminate();
   });
 
   socket.on("close", () => {
+    connected = false;
+    if (stopped) return;
     console.log(
       `AISStream disconnected. Reconnecting in ${RECONNECT_MS / 1000}s...`
     );
 
-    setTimeout(connect, RECONNECT_MS);
+    clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connect, RECONNECT_MS);
   });
 }
 
@@ -409,16 +428,9 @@ const server = http.createServer((req, res) => {
   const pathname = new URL(req.url, "http://localhost").pathname;
 
   if (pathname === "/health") {
-    const tankers = getTankers();
-
-    res.writeHead(200);
-    res.end(JSON.stringify({
-      ok: true,
-      vessels: vessels.size,
-      staticRecords: staticData.size,
-      tankers: tankers.length,
-      timestamp: new Date().toISOString(),
-    }));
+    const status = health();
+    res.writeHead(status.ok ? 200 : 503);
+    res.end(JSON.stringify(status));
     return;
   }
 
@@ -429,6 +441,7 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({
       vessels: tankers,
       count: tankers.length,
+      stream: health(),
       generatedAt: new Date().toISOString(),
     }));
     return;
@@ -438,16 +451,36 @@ const server = http.createServer((req, res) => {
   res.end(JSON.stringify({ error: "Not found" }));
 });
 
-if (!API_KEY) {
-  console.error("AISSTREAM_API_KEY is not configured");
-  process.exit(1);
+return {
+  server, health, ingest, cleanup:removeStaleVessels, getTankers,
+  start() {
+    if (!API_KEY) throw new Error('AISSTREAM_API_KEY is not configured');
+    if (cleanupTimer) throw new Error('AIS collector is already started');
+    stopped = false;
+    cleanupTimer = setInterval(removeStaleVessels,cleanupMs);
+    cleanupTimer.unref?.();
+    server.listen(port,host);
+    connect();
+  },
+  stop() {
+    stopped = true;
+    connected = false;
+    clearTimeout(reconnectTimer);
+    clearInterval(cleanupTimer);
+    cleanupTimer = null;
+    socket?.terminate();
+    server.close();
+    server.closeAllConnections();
+  },
+};
 }
 
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`AIS collector listening on port ${PORT}`);
-});
-
-connect();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const collector = createCollector();
+  try { collector.start(); } catch (error) { console.error(error.message); process.exitCode = 1; }
+  process.once('SIGINT',() => collector.stop());
+  process.once('SIGTERM',() => collector.stop());
+}
 
 
 

@@ -5,12 +5,22 @@ test("Tanker preparation rejects invalid coordinates, handles unavailable AIS he
   const { points, routes } = tankerFeatures([
     { mmsi:"123456789",lat:20,lon:179,heading:511,course:90,speed:10,history:[
       {lat:20,lon:178,timestamp:'2026-01-01T00:00:00Z'},
-      {lat:20,lon:179,timestamp:'2026-01-01T01:00:00Z'},
-      {lat:20,lon:-179,timestamp:'2026-01-01T02:00:00Z'},
-      {lat:20,lon:-178,timestamp:'2026-01-01T03:00:00Z'},
+      {lat:20,lon:179,timestamp:'2026-01-01T02:00:00Z'},
+      {lat:20,lon:-179,timestamp:'2026-01-01T06:00:00Z'},
+      {lat:20,lon:-178,timestamp:'2026-01-01T08:00:00Z'},
     ] }, {mmsi:'bad',lat:95,lon:0},
   ]);
   assert.equal(points.features.length,1);
   assert.equal(points.features[0].properties.direction,90);
   assert.equal(routes.features.length,2);
+});
+test('Impossible jumps split routes without weakening the speed threshold', () => {
+  const {routes} = tankerFeatures([{mmsi:'1',lat:20,lon:20,history:[
+    {lat:20,lon:0,timestamp:'2026-01-01T00:00:00Z'},
+    {lat:20,lon:0.1,timestamp:'2026-01-01T01:00:00Z'},
+    {lat:20,lon:20,timestamp:'2026-01-01T02:00:00Z'},
+    {lat:20,lon:20.1,timestamp:'2026-01-01T03:00:00Z'},
+  ]}]);
+  assert.equal(routes.features.length,2);
+  assert.deepEqual(routes.features.map(f => f.geometry.coordinates),[[[0,20],[0.1,20]],[[20,20],[20.1,20]]]);
 });

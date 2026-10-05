@@ -1,4 +1,5 @@
-﻿import { t, useLanguage } from "../controls/i18n.jsx";
+import usePipelines from '../controls/usePipelines.jsx';
+import { t, useLanguage } from "../controls/i18n.jsx";
 import React, {
   useEffect,
   useMemo,
@@ -11,6 +12,7 @@ import BaseMapSwitcher from "../controls/BaseMapSwitcher.jsx";
 import IndicatorSelect from "../controls/IndicatorSelect.jsx";
 import LanguageSwitcher from "../controls/LanguageSwitcher.jsx";
 import ModeHelp from "../panels/ModeHelp.jsx";
+import CountryRanking from '../panels/CountryRanking.jsx';
 import {
   aggregate,
   createAnalytics,
@@ -20,13 +22,19 @@ import { MODES, CLASSES, ANOMALIES } from "../analytics/config.mjs";
 import { colorScale } from "../map/layers.mjs";
 import { loadTankers } from "../map/TankerLayer.mjs";
 import VesselTypes from "../panels/VesselTypes.jsx";
+import DeadweightFilter from "../panels/DeadweightFilter.jsx";
 import {
   ALL_VESSEL_TYPES,
+  ALL_DEADWEIGHT_CLASSES,
+  deadweightClassCounts,
   normalizeFleet,
   vesselTypeCounts,
 } from "../map/vessel-types.mjs";
 import { readState, writeState } from "../controls/state.mjs";
 import { finite, format } from "../utils/numbers.mjs";
+import useOilfields from '../controls/useOilfields.jsx';
+import OilfieldPanel, { FieldLayerControls } from '../panels/OilfieldPanel.jsx';
+import { validFieldCoordinates } from '../analytics/oilfields.mjs';
 export function createAtlasApp({
   WorldMap,
   Owners,
@@ -37,14 +45,23 @@ export function createAtlasApp({
 }) {
   return function AtlasApp({ data, geometry }) {
     useLanguage();
+    const oilfields = useOilfields();
+    const [pipelineVisibility,setPipelineVisibility]=useState({oil:false,gas:false});
+    const pipelines=usePipelines(pipelineVisibility.oil||pipelineVisibility.gas);
+    const mapPipelines=useMemo(()=>({...pipelines,filtered:pipelines.records.filter(p=>pipelineVisibility[p.id.split(':')[0]]),color:'product'}),[pipelines,pipelineVisibility]);
+    const selectPipeline=useCallback(id=>{pipelines.select(id);},[pipelines.select]);
+    const [selectedTanker,setSelectedTanker] = useState(null);
     const mapViewport = useRef(null);
-    const onViewportChange = useCallback(viewport => { mapViewport.current = viewport; }, []);
+    const onViewportChange = useCallback(viewport => { mapViewport.current = viewport; oilfields.onViewport(viewport); }, [oilfields.onViewport]);
     const [help, setHelp] = useState(null);
     const closeHelp = useCallback(() => setHelp(null), []);
     const [tankers, setTankers] = useState([]);
-    const [tankersEnabled, setTankersEnabled] = useState(true);
+    const tankersEnabled = oilfields.preferences.tankers;
+    const setTankersEnabled = useCallback(value => oilfields.setPreference('tankers',value),[oilfields.setPreference]);
     const [selectedVesselTypes, setSelectedVesselTypes] =
       useState(ALL_VESSEL_TYPES);
+    const [selectedDeadweightClasses,setSelectedDeadweightClasses] =
+      useState(ALL_DEADWEIGHT_CLASSES);
 
     const fleet = useMemo(
       () => normalizeFleet(tankers),
@@ -53,6 +70,10 @@ export function createAtlasApp({
 
     const vesselCounts = useMemo(
       () => vesselTypeCounts(fleet),
+      [fleet]
+    );
+    const deadweightCounts = useMemo(
+      () => deadweightClassCounts(fleet),
       [fleet]
     );
     useEffect(() => {
@@ -95,8 +116,9 @@ export function createAtlasApp({
     const menu = activePanel === "menu", quality = activePanel === "quality";
     const activeAnalysis = state.mode === "none" ? null : state.mode;
     const analysisMode = activeAnalysis || "overview";
-    const setMenu = (open) => setActivePanel(open ? "menu" : "analysis");
-    const setQuality = (open) => setActivePanel(open ? "quality" : "analysis");
+    const showLegacyPanel = () => { if (window.matchMedia('(max-width:760px)').matches) oilfields.setPreference('panel',false); };
+    const setMenu = (open) => { if (open) { showLegacyPanel();  } setActivePanel(open ? "menu" : "analysis"); };
+    const setQuality = (open) => { if (open) showLegacyPanel(); setActivePanel(open ? "quality" : "analysis"); };
     const update = (patch) =>
       setState((s) => ({
         ...s,
@@ -170,6 +192,7 @@ export function createAtlasApp({
           finite(v) || (typeof v === "string" && v !== "Insufficient Data"),
       ).length;
     function country(id) {
+      showLegacyPanel();
       setSelectedRefinery("");
       setActivePanel(compare.length && activePanel === "comparison" ? "comparison" : "country");
       if (compare.length && activePanel === "comparison") {
@@ -188,6 +211,7 @@ export function createAtlasApp({
     function refinery(id) {
       const r = atlas.refineriesById.get(id);
       if (!r) return;
+      showLegacyPanel();
       setCompare([]);
       setActivePanel("refinery");
       setSelectedRefinery(id);
@@ -231,6 +255,7 @@ export function createAtlasApp({
       ...new Set(atlas.stats.map((c) => c.priceUnit).filter(Boolean)),
     ];
     const selectTanker = useCallback((vessel) => {
+      setSelectedTanker({...vessel});
       const lat = Number(vessel.lat);
       const lon = Number(vessel.lon);
 
@@ -252,11 +277,21 @@ export function createAtlasApp({
         zoom: 8,
       });
     }, [selectedVesselTypes]);
+    const selectOilfield = useCallback(field => {
+      oilfields.setSelected({...field});
+      oilfields.setPreference('panel',false);
+      if (validFieldCoordinates(field)) {
+        oilfields.setPreference('fields',true);
+        setFocus({ points:[[field.lon,field.lat]], zoom:Math.max(mapViewport.current?.zoom || 0,6), onlyIfNeeded:true });
+      }
+    },[oilfields.setPreference]);
+    const mapTankerSelect = useCallback(vessel => { setSelectedTanker({...vessel}); oilfields.setPreference('panel',false); },[oilfields.setPreference]);
 
     return (
       <main className="atlas-app" data-active-analysis={activeAnalysis || "none"}>
         {help && <ModeHelp mode={help} onClose={closeHelp} />}
         <WorldMap
+          pipelineModel={mapPipelines} pipelinesEnabled={pipelineVisibility.oil||pipelineVisibility.gas} onPipelineSelect={selectPipeline}
           geometry={geometry}
           atlas={atlas}
           rows={rows}
@@ -273,6 +308,13 @@ export function createAtlasApp({
           tankers={fleet}
           tankersEnabled={tankersEnabled}
           selectedVesselTypes={selectedVesselTypes}
+          selectedDeadweightClasses={selectedDeadweightClasses}
+          onTankerSelect={mapTankerSelect}
+          oilfields={oilfields.filtered}
+          oilfieldsEnabled={oilfields.preferences.fields}
+          oilfieldsClustered={oilfields.preferences.clusters}
+          selectedOilfield={oilfields.selected}
+          onOilfieldSelect={selectOilfield}
         />
 
         <MapOverlayLayout
@@ -301,7 +343,9 @@ export function createAtlasApp({
             onRefinery={refinery}
             onOwner={owner}
           /></>}
-          right={<><LanguageSwitcher />        <Owners
+          right={<><LanguageSwitcher />
+            <FieldLayerControls pipelineVisibility={pipelineVisibility} onPipelineChange={(type,value)=>setPipelineVisibility(p=>({...p,[type]:value}))} fields={oilfields} tankersEnabled={tankersEnabled} onTankersChange={setTankersEnabled} />
+            <Owners
           owners={atlas.owners}
           selected={state.owner}
           onSelect={owner}
@@ -317,6 +361,13 @@ export function createAtlasApp({
               vessels={fleet}
               onVesselSelect={selectTanker}
             />
+            <DeadweightFilter
+              selected={selectedDeadweightClasses}
+              onChange={setSelectedDeadweightClasses}
+              counts={deadweightCounts}
+              enabled={tankersEnabled}
+            />
+            <OilfieldPanel fields={oilfields} selectedTanker={selectedTanker} onFieldSelect={selectOilfield} />
 </>}
           workspace={<>
             {menu ? <>        {t(
@@ -518,6 +569,7 @@ export function createAtlasApp({
             {t("\u21BA Reset View")}
           </button>
         </section>
+        {['trade','consumption'].includes(analysisMode) && <CountryRanking key={metric.id} countries={atlas.stats} metric={metric} onSelect={country} />}
         <div className="active-filters">
           {t(
             state.owner && (

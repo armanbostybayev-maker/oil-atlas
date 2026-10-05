@@ -18,3 +18,11 @@ artifacts/
 *.backup_before_*.json
 .vercel
 .env*
+!.env.example
+data/.update.lock
+data/**/*.tmp
+__pycache__/
+*.py[cod]
+*.before-*
+data/archive/
+data/sources/jodi/*.csv

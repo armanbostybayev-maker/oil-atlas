@@ -1,3 +1,4 @@
+import { JODI_METRICS } from '../data/jodi.mjs';
 export const CLASSIFICATION = {
   exportRatio: 1.5,
   hubRatio: 1.25,
@@ -64,6 +65,11 @@ export const MODES = {
       metric("ngpl", "NGPL", "bbl/day", "ngpl"),
     ],
   },
+  trade: {
+    label: 'Oil exports and imports',
+    icon: '⇥',
+    metrics: Object.entries(JODI_METRICS).filter(([key])=>/Exports|Imports/.test(key)).map(([key,v])=>metric(key,v[3],'bbl/day','Latest complete annual data · JODI / OPEC')),
+  },
   consumption: {
     label: "Consumption",
     icon: "↘",
@@ -74,6 +80,7 @@ export const MODES = {
         "bbl/day",
         "consumption",
       ),
+      ...Object.entries(JODI_METRICS).filter(([key])=>/Demand|Intake/.test(key)).map(([key,v])=>metric(key,v[3],'bbl/day','Latest complete annual data · JODI / OPEC')),
       metric(
         "consumptionPerRefinery",
         "Consumption per refinery",

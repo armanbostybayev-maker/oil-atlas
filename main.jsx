@@ -45,7 +45,7 @@ function Bootstrap() {
     const controller = new AbortController();
     Promise.all(
       ["atlas.json", "countries.geojson"].map(async (f) => {
-        const r = await fetch("/data/" + f, {
+        const r = await fetch(import.meta.env.BASE_URL + "data/" + f, {
           signal: controller.signal,
         });
         if (!r.ok) throw new Error(`Dataset ${f}: HTTP ${r.status}`);

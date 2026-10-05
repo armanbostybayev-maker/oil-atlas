@@ -13,7 +13,9 @@ export async function checkOverlay(page, check, dir) {
   };
   const geometry = async () => {
     const boxes = await page.evaluate(() => {
-      const selectors = ['.overlay-brand', '.overlay-search', '.overlay-workspace', '.language-switcher', '.owners-trigger', '.owners-dropdown', '.overlay-bottom-left', '.overlay-summary', '.overlay-navigation'];
+      // Measure the visible brand panel: its mobile wrapper deliberately
+      // reserves transparent padding for the language/owner controls.
+      const selectors = ['.overlay-brand .brand', '.overlay-search', '.overlay-workspace', '.language-switcher', '.owners-trigger', '.owners-dropdown', '.overlay-bottom-left', '.overlay-summary', '.overlay-navigation'];
       return selectors.flatMap(selector => [...document.querySelectorAll(selector)].map(e => {
         const r = e.getBoundingClientRect(); return { selector, x: r.x, y: r.y, right: r.right, bottom: r.bottom, width: r.width, height: r.height };
       })).filter(r => r.width && r.height);

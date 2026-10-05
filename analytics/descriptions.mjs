@@ -1,5 +1,9 @@
 // Explanations describe the actual rules in atlas.mjs and config.mjs.
 export const DESCRIPTIONS = {
+  trade: {
+    en: ['Reported gross exports and imports of crude oil and petroleum products, from JODI-Oil, supplemented by OPEC ASB 2025 annual exports where newer. These are observed trade flows, not production minus consumption.', 'Annual daily averages are weighted by the number of days in each month. Only 12 valid months are used; each country and metric uses its latest complete year in 2021–2025. Rankings can therefore compare different years.', 'Missing, confidential and under-verification observations are not replaced by zero. Coverage is incomplete; source assessment codes and links appear in country profiles.'],
+    ru: ['Фактический валовой экспорт и импорт сырой нефти и нефтепродуктов по JODI-Oil с дополнением более новых годовых данных об экспорте из ОПЕК ASB 2025. Это торговые потоки, а не разность добычи и потребления.', 'Среднесуточное значение за год взвешено по числу дней в месяцах. Требуются все 12 месяцев; для каждой страны и показателя выбран последний полный год из 2021–2025. В рейтинге могут сравниваться разные годы.', 'Пропуски, конфиденциальные значения и данные на проверке не заменяются нулями. Покрытие неполное; ссылки на источники и оценки качества доступны в профиле страны.'],
+  },
   overview: {
     en: [
       "Explore the refinery inventory on a neutral world map. Circle sizes follow the square root of reported capacity, with minimum and maximum radii; grey dots have no numeric capacity.",
@@ -50,12 +54,12 @@ export const DESCRIPTIONS = {
   },
   consumption: {
     en: [
-      "Map national oil/products consumption, consumption per refinery, or consumption relative to refining capacity.",
+      "Map national oil/products consumption and JODI product demand by fuel. JODI needs 12 valid months, using the latest full year in 2021–2025. Crude refinery intake is processing rather than final consumption.",
       "Consumption per refinery = daily consumption / matched refinery records. Consumption/refining = daily consumption / (annual tonnes × 7.33 / 365).",
       "A zero or missing denominator gives No data. Refining comparisons require complete capacity coverage without duplicate warnings; consumption year and capacity vintage may differ.",
     ],
     ru: [
-      "Потребление нефти и нефтепродуктов по странам, потребление на один НПЗ или отношение потребления к мощности переработки.",
+      "Потребление по странам и спрос на отдельные нефтепродукты по JODI: последний полный год за 2021–2025, все 12 месяцев. Загрузка НПЗ сырой нефтью — переработка, а не конечное потребление.",
       "На НПЗ = суточное потребление / число привязанных записей НПЗ. Потребление/переработка = суточное потребление / (т/год × 7,33 / 365).",
       "Нулевой или неизвестный знаменатель даёт «Нет данных». Для сравнения с переработкой нужны полные мощности без предупреждений о дублях; годы потребления и мощности могут различаться.",
     ],

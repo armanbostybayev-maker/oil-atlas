@@ -14,7 +14,7 @@
  * @property {Array<{lat:number,lon:number,timestamp:string}>} [history]
  */
 
-import { ALL_VESSEL_TYPES, vesselMapFilter, vesselCompanyKey } from './vessel-types.mjs';
+import { ALL_VESSEL_TYPES, ALL_DEADWEIGHT_CLASSES, vesselMapFilter, vesselCompanyKey } from './vessel-types.mjs';
 import { parseAisTimestamp } from './ais-time.mjs';
 const collection = features => ({
   type: "FeatureCollection",
@@ -78,6 +78,7 @@ export function tankerFeatures(vessels) {
       },
       properties: {
         ...vessel,
+        sourceAttributes: undefined,
         history: undefined,
         companyKey: vesselCompanyKey(vessel),
         direction,
@@ -216,6 +217,7 @@ export class TankerLayer {
     { onSelect = () => {} } = {}
   ) {
     this.map = map;
+    this.vessels = new Map();
 
     this.click = e => {
       const feature = map.queryRenderedFeatures(
@@ -227,7 +229,7 @@ export class TankerLayer {
 
       if (feature) {
         onSelect(
-          feature.properties,
+          this.vessels.get(String(feature.properties.mmsi)) || feature.properties,
           e.lngLat
         );
       }
@@ -325,6 +327,7 @@ export class TankerLayer {
   }
 
   setData(vessels) {
+    this.vessels = new Map(vessels.map(vessel => [String(vessel.mmsi), vessel]));
     const data = tankerFeatures(vessels);
 
     this.map
@@ -349,8 +352,8 @@ export class TankerLayer {
     }
   }
 
-  setFilter(selected = ALL_VESSEL_TYPES, company = '') {
-    const filter = vesselMapFilter(selected,company);
+  setFilter(selected = ALL_VESSEL_TYPES, company = '', deadweights = ALL_DEADWEIGHT_CLASSES) {
+    const filter = vesselMapFilter(selected,company,deadweights);
     for (const id of ['tankers','tanker-history']) this.map.setFilter(id,filter);
   }
 

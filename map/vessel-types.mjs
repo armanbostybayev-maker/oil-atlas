@@ -16,6 +16,26 @@ export const VESSEL_TYPES = [
   ['unknown_tanker','Other / Unknown Tanker'],
 ].map(([id,label]) => ({id,label}));
 export const ALL_VESSEL_TYPES = VESSEL_TYPES.map(t => t.id);
+export const DEADWEIGHT_CLASSES = [
+  {id:'gp',label:'GP',description:'6,000–25,000 t',min:6000,max:25000},
+  {id:'mr',label:'MR',description:'25,000–45,000 t',min:25000,max:45000},
+  {id:'lr1',label:'LR1',description:'45,000–80,000 t',min:45000,max:80000},
+  {id:'lr2',label:'LR2',description:'80,000–160,000 t',min:80000,max:160000},
+  {id:'vlcc',label:'VLCC',description:'160,000–320,000 t',min:160000,max:320000},
+  {id:'ulcc',label:'ULCC',description:'over 320,000 t',min:320000,max:Infinity},
+];
+export const ALL_DEADWEIGHT_CLASSES = DEADWEIGHT_CLASSES.map(item => item.id);
+export function deadweightClass(deadweight) {
+  const value = Number(deadweight);
+  if (!Number.isFinite(value) || value <= 0) return null;
+  if (value >= 6000 && value < 25000) return 'gp';
+  if (value >= 25000 && value < 45000) return 'mr';
+  if (value >= 45000 && value < 80000) return 'lr1';
+  if (value >= 80000 && value < 160000) return 'lr2';
+  if (value >= 160000 && value <= 320000) return 'vlcc';
+  if (value > 320000) return 'ulcc';
+  return null;
+}
 const textKey = value => typeof value === 'string' ? value.trim().toLowerCase().replace(/[_–—-]/g,' ').replace(/\s+/g,' ') : '';
 const aliases = new Map();
 for (const [id, texts] of [
@@ -74,7 +94,7 @@ export function vesselCompany(vessel) {
 export function normalizeFleet(vessels) {
   return vessels.flatMap(v => {
     const type = normalizeVesselType(v);
-    return type && v.mmsi ? [{...v,...type,companyName:vesselCompany(v)}] : [];
+    return type && v.mmsi ? [{...v,...type,companyName:vesselCompany(v),deadweightClassId:deadweightClass(v.deadweight)}] : [];
   });
 }
 export function matchesVesselCompany(vessel, company) {
@@ -97,11 +117,29 @@ export function vesselSelectionState(selected) {
   return {checked:count===ALL_VESSEL_TYPES.length,indeterminate:count>0 && count<ALL_VESSEL_TYPES.length};
 }
 export const selectAllVesselTypes = checked => checked ? [...ALL_VESSEL_TYPES] : [];
-export function matchesVesselFilters(vessel,selected,company='') {
-  return selected.includes(vessel.vesselTypeId) && matchesVesselCompany(vessel,company);
+export function deadweightClassCounts(fleet,company='') {
+  const counts = Object.fromEntries(ALL_DEADWEIGHT_CLASSES.map(id => [id,0]));
+  for (const vessel of fleet) if (matchesVesselCompany(vessel,company) && Object.hasOwn(counts,vessel.deadweightClassId)) counts[vessel.deadweightClassId]++;
+  return counts;
 }
-export function vesselMapFilter(selected,company='') {
+export function toggleDeadweightClass(selected,id,checked) {
+  const next = new Set(selected);
+  if (ALL_DEADWEIGHT_CLASSES.includes(id)) checked ? next.add(id) : next.delete(id);
+  return ALL_DEADWEIGHT_CLASSES.filter(item => next.has(item));
+}
+export function deadweightSelectionState(selected) {
+  const count = ALL_DEADWEIGHT_CLASSES.filter(id => selected.includes(id)).length;
+  return {checked:count===ALL_DEADWEIGHT_CLASSES.length,indeterminate:count>0 && count<ALL_DEADWEIGHT_CLASSES.length};
+}
+export const selectAllDeadweightClasses = checked => checked ? [...ALL_DEADWEIGHT_CLASSES] : [];
+export function matchesVesselFilters(vessel,selected,company='',deadweights=ALL_DEADWEIGHT_CLASSES) {
+  const allDeadweights = deadweights.length === ALL_DEADWEIGHT_CLASSES.length;
+  return selected.includes(vessel.vesselTypeId) && matchesVesselCompany(vessel,company) &&
+    (allDeadweights || deadweights.includes(vessel.deadweightClassId));
+}
+export function vesselMapFilter(selected,company='',deadweights=ALL_DEADWEIGHT_CLASSES) {
   return ['all', ['in',['get','vesselTypeId'],['literal',selected]],
+    ...(deadweights.length === ALL_DEADWEIGHT_CLASSES.length ? [] : [['in',['get','deadweightClassId'],['literal',deadweights]]]),
     ...(company ? [['==',['get','companyKey'],textKey(ownerName(company))]] : [])];
 }
 export const vesselCompanyKey = vessel => textKey(vesselCompany(vessel));

@@ -1,0 +1,10 @@
+.pipeline-attributes-popup {z-index:20;}
+.world-map .pipeline-attributes-popup .maplibregl-popup-content {padding:12px 14px 10px;border-radius:10px;max-height:none;overflow:hidden;box-sizing:border-box;}
+.pipeline-popup-card {width:240px;max-width:calc(100vw - 65px);max-height:min(310px,45dvh);overflow:auto;scrollbar-gutter:stable;color:#274653;font:10px/1.5 'Segoe UI',sans-serif;}
+.pipeline-popup-card h3 {margin:0 0 10px;font-size:12px;line-height:1.5;position:sticky;top:0;background:white;padding-bottom:5px;}
+.pipeline-popup-card table {width:100%;border-collapse:collapse;table-layout:fixed;}
+.pipeline-popup-card th,.pipeline-popup-card td {text-align:left;vertical-align:top;padding:5px 3px;border-bottom:1px solid #dce6e9;overflow-wrap:anywhere;}
+.pipeline-popup-card th {width:42%;font-weight:400;color:#637e89;}
+.pipeline-popup-card details {margin-top:12px;}.pipeline-popup-card pre {white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;}
+.pipeline-name-popup {pointer-events:none;z-index:21;}.pipeline-name-popup .maplibregl-popup-content {padding:5px 9px;border-radius:6px;font:600 12px 'Segoe UI',sans-serif;}
+.world-map .pipeline-name-popup .maplibregl-popup-content{padding:5px 9px!important;min-height:0;}.world-map .pipeline-name-popup strong{font:600 12px/1.4 Segoe UI,sans-serif;}

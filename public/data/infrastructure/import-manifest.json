@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "generated_on": "2026-09-25",
+  "status": "approved_for_publication",
+  "datasets": [
+    {
+      "type": "oil",
+      "file": "oil-pipelines.geojson",
+      "features": 1008,
+      "sha256": "a1909b45fec6eeab0a22a99c5f467f4aeb581f593748e4bc8e0b1d49496c6307",
+      "source": "Global Oil Infrastructure Tracker, Global Energy Monitor",
+      "source_url": "https://globalenergymonitor.org/projects/global-oil-infrastructure-tracker/",
+      "source_release": null,
+      "release_status": "unknown_user_confirmed",
+      "unknown_release_approval": "User authorized publication and confirmed release unknown on 2026-09-25",
+      "redistribution_permission": "CC BY 4.0; GEM states all its data are freely available under this license unless otherwise noted. Supplied QMD identifies GEM; no contrary notice present.",
+      "permission_url": "https://globalenergymonitor.org/wp-content/uploads/2024/02/GEM_Europe_Gas_Tracker_2024.pdf",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "Global Oil Infrastructure Tracker, Global Energy Monitor. Upstream release unknown. User-supplied snapshot, published by Oil Atlas 2026-09-25. CC BY 4.0. Properties normalized; original properties and geometry preserved.",
+      "published_sha256": "6b155ffb2fc452004fdd85b661ed5dc6232e8c2e7fcda3eba41f0fea5aaceaed",
+      "excluded_features": 460,
+      "exclusion_reason": "User requested removal of very low (straight line/schematic) routes"
+    },
+    {
+      "type": "gas",
+      "file": "gas-pipelines.geojson",
+      "features": 2214,
+      "sha256": "ff662074556bca28e61b08b8f1e1b6876f8aac7e0fac0eea447537d0d634fc02",
+      "source": "Global Gas Infrastructure Tracker, Global Energy Monitor",
+      "source_url": "https://globalenergymonitor.org/projects/global-gas-infrastructure-tracker/",
+      "source_release": null,
+      "missing_source_dates": 12,
+      "release_status": "unknown_user_confirmed",
+      "unknown_release_approval": "User authorized publication and confirmed release unknown on 2026-09-25",
+      "redistribution_permission": "CC BY 4.0; GEM states all its data are freely available under this license unless otherwise noted. Supplied QMD identifies GEM; no contrary notice present.",
+      "permission_url": "https://globalenergymonitor.org/wp-content/uploads/2024/02/GEM_Europe_Gas_Tracker_2024.pdf",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "Global Gas Infrastructure Tracker, Global Energy Monitor. Upstream release unknown. User-supplied snapshot, published by Oil Atlas 2026-09-25. CC BY 4.0. Properties normalized; original properties and geometry preserved.",
+      "published_sha256": "7a8b4aef624b2a1a7798097f0f81bdca26e4df5a2484300154c7ccba41de2e07",
+      "excluded_features": 719,
+      "exclusion_reason": "User requested removal of very low (straight line/schematic) routes"
+    }
+  ],
+  "note": "User authorized publication and confirmed unknown upstream GEM release. Exact supplied and published bytes are identified separately. Geometry unchanged; properties normalized; no capacity or throughput estimates added. Very low (straight line/schematic) routes removed from the previously published snapshot at user request; retained records unchanged."
+}

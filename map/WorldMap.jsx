@@ -1,8 +1,11 @@
-﻿import { t, useLanguage } from "../controls/i18n.jsx";
+import { PipelineAnalyticsLayer } from './PipelineAnalyticsLayer.mjs';
+import { t, useLanguage } from "../controls/i18n.jsx";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { TankerLayer } from "./TankerLayer.mjs";
-import { createTankerCard } from "./TankerCard.mjs";
+import { OilfieldLayer, OILFIELD_LAYERS } from './OilfieldLayer.mjs';
+import { FieldDetails, TankerAttributes } from '../panels/OilfieldPanel.jsx';
+import { oilfieldName } from '../utils/country-display.mjs';
 import {
   Map,
   NavigationControl,
@@ -21,6 +24,7 @@ setWorkerUrl(workerUrl);
 const worldZoom = () =>
   Math.max(-0.7, Math.min(1.6, Math.log2(window.innerWidth / 512) - 0.15));
 export default function WorldMap({
+  pipelineModel, pipelinesEnabled=false, onPipelineSelect,
   geometry,
   atlas,
   rows,
@@ -37,22 +41,35 @@ export default function WorldMap({
   tankers = null,
   tankersEnabled = false,
   selectedVesselTypes,
+  selectedDeadweightClasses,
+  onTankerSelect,
+  oilfields = [],
+  oilfieldsEnabled = true,
+  oilfieldsClustered = true,
+  selectedOilfield,
+  onOilfieldSelect,
 }) {
   const language = useLanguage();
+  const pipelineLayer=useRef(null);
+  const [objectCard,setObjectCard] = useState(null);
+  const [cardHost,setCardHost] = useState(null);
   const element = useRef(null),
     mapRef = useRef(null),
     live = useRef({}),
     tankerLayer = useRef(null),
-    tankerPopup = useRef(null),
+    oilfieldLayer = useRef(null),
     [ready, setReady] = useState(false),
     [notice, setNotice] = useState("");
   live.current = {
+    onPipelineSelect,
     atlas,
     state,
     values,
     metric,
     onSelect,
     onViewportChange,
+    onTankerSelect,
+    onOilfieldSelect,
   };
   useEffect(() => {
     let instance;
@@ -80,10 +97,13 @@ export default function WorldMap({
     instance.addControl(navigation, "bottom-right");
     const controls = document.getElementById("map-navigation");
     if (controls) controls.append(navigation._container);
-    instance.on("moveend", () => live.current.onViewportChange?.({
+    const reportViewport = () => live.current.onViewportChange?.({
       center: instance.getCenter().toArray(), zoom: instance.getZoom(),
       bearing: instance.getBearing(), pitch: instance.getPitch(),
-    }));
+      bounds: [instance.getBounds().getWest(),instance.getBounds().getSouth(),instance.getBounds().getEast(),instance.getBounds().getNorth()],
+    });
+    instance.on("moveend",reportViewport);
+    instance.on("resize",reportViewport);
     instance.addControl(new ScaleControl(), "bottom-left");
     const popup = new Popup({
       closeButton: false,
@@ -209,17 +229,22 @@ export default function WorldMap({
         },
       });
       tankerLayer.current = new TankerLayer(instance, { onSelect: (vessel, lngLat) => {
-        tankerPopup.current?.remove();
-        const content = createTankerCard(vessel, t);
-        tankerPopup.current = new Popup({ maxWidth: "420px", offset: 18 }).setLngLat(lngLat).setDOMContent(content).addTo(instance);
+        setObjectCard({kind:'tanker',value:vessel});
+        live.current.onTankerSelect?.(vessel);
       }});
+      oilfieldLayer.current = new OilfieldLayer(instance,{ Popup, translate:t, onSelect:field => { setObjectCard({kind:'field',value:field}); live.current.onOilfieldSelect?.(field); }, onError:() => setNotice('Oilfield icons unavailable') });
+      pipelineLayer.current=new PipelineAnalyticsLayer(instance,id=>live.current.onPipelineSelect?.(id));
       setReady(true);
+      reportViewport();
       onReady?.(instance);
       if (import.meta.env.DEV) window.__oilAtlasMap = instance;
     });
     instance.on("click", (event) => {
       if (!instance.getLayer("countries-fill")) return;
       if (instance.getLayer("tankers") && instance.queryRenderedFeatures(event.point, { layers: ["tankers"] }).length) return;
+      if(pipelineLayer.current?.hit(event.point))return;
+      const fieldLayers = OILFIELD_LAYERS.filter(id => instance.getLayer(id));
+      if (fieldLayers.length && instance.queryRenderedFeatures(event.point,{layers:fieldLayers}).length) return;
       const found = instance.queryRenderedFeatures(event.point, {
         layers: ["refinery-circles", "countries-fill"],
       })[0];
@@ -248,6 +273,8 @@ export default function WorldMap({
     });
     instance.on("mousemove", (event) => {
       if (!instance.getLayer("refinery-circles")) return;
+      if (pipelineLayer.current?.hit(event.point)) { popup.remove(); return; }
+      if (oilfieldLayer.current?.hit(event.point)) { popup.remove(); return; }
 
       const refinery = instance.queryRenderedFeatures(event.point, {
         layers: ["refinery-circles"],
@@ -299,24 +326,37 @@ export default function WorldMap({
     });
     instance.on("mouseout", () => popup.remove());
     return () => {
-      tankerPopup.current?.remove();
+      pipelineLayer.current?.destroy();pipelineLayer.current=null;
+      oilfieldLayer.current?.destroy();
+      oilfieldLayer.current = null;
       tankerLayer.current?.destroy();
       tankerLayer.current = null;
       popup.remove();
       instance.remove();
     };
   }, [geometry, atlas]);
+  useEffect(()=>{if(ready&&pipelineModel)pipelineLayer.current?.setData(pipelineModel.records);},[ready,pipelineModel?.records]);
+  useEffect(()=>{if(ready&&pipelineModel)pipelineLayer.current?.update({enabled:pipelinesEnabled,filtered:pipelineModel.filtered,selected:pipelineModel.selected,color:pipelineModel.color,unit:pipelineModel.filters.unit,group:pipelineModel.filters.group});},[ready,pipelinesEnabled,pipelineModel?.filtered,pipelineModel?.selected,pipelineModel?.color,pipelineModel?.filters.unit,pipelineModel?.filters.group]);
+
   useEffect(() => {
     if (!ready || !tankerLayer.current) return;
     tankerLayer.current.setData(tankers || []);
     tankerLayer.current.setVisible(tankersEnabled);
-    if (!tankersEnabled) tankerPopup.current?.remove();
   }, [ready, tankers, tankersEnabled]);
   useEffect(() => {
     if (!ready || !tankerLayer.current) return;
-    tankerLayer.current.setFilter(selectedVesselTypes, state.owner);
-    tankerPopup.current?.remove();
-  }, [ready, selectedVesselTypes, state.owner]);
+    tankerLayer.current.setFilter(selectedVesselTypes, state.owner, selectedDeadweightClasses);
+  }, [ready, selectedVesselTypes, selectedDeadweightClasses, state.owner]);
+  useEffect(() => {
+    if (!ready || !oilfieldLayer.current) return;
+    oilfieldLayer.current.setData(oilfields);
+  },[ready,oilfields]);
+  useEffect(() => {
+    if (!ready || !oilfieldLayer.current) return;
+    oilfieldLayer.current.setVisible(oilfieldsEnabled);
+    oilfieldLayer.current.setClustering(oilfieldsClustered);
+    oilfieldLayer.current.select(selectedOilfield);
+  },[ready,oilfieldsEnabled,oilfieldsClustered,selectedOilfield]);
   useEffect(() => {
     if (!ready) return;
     const container = mapRef.current.getContainer();
@@ -472,6 +512,7 @@ export default function WorldMap({
     const points = focus.points?.filter((p) => Array.isArray(p));
     if (!points?.length) return;
     if (points.length === 1) {
+      if (focus.onlyIfNeeded && m.getBounds().contains(points[0]) && m.getZoom() >= 6) return;
       m.flyTo({
         center: points[0],
         zoom: focus.zoom || 5,
@@ -495,8 +536,31 @@ export default function WorldMap({
       duration: 850,
     });
   }, [ready, focus]);
+  useEffect(() => {
+    if (selectedOilfield) setObjectCard({kind:'field',value:selectedOilfield});
+  },[selectedOilfield]);
+  useEffect(() => {
+    if (!ready || !objectCard) return;
+    if (objectCard.kind === 'field' && (!oilfieldsEnabled || !oilfields.some(f=>f.id===objectCard.value.id))) return;
+    if (objectCard.kind === 'tanker' && !tankersEnabled) return;
+    const value=objectCard.value, point=[Number(value.lon),Number(value.lat)];
+    if (!point.every(Number.isFinite)) return;
+    const map=mapRef.current, host=document.createElement('div');
+    host.className='object-popup-table oilfield-panel-content';
+    const popup=new Popup({anchor:'top-left',offset:25,closeOnClick:false,maxWidth:'350px',className:'object-map-popup'}).setLngLat(point).setDOMContent(host).addTo(map);
+    setCardHost(host);
+    let label;
+    if (objectCard.kind === 'field') {
+      const name=document.createElement('strong'); name.textContent=oilfieldName(value,language);
+      label=new Popup({anchor:'bottom',offset:25,closeButton:false,closeOnClick:false,maxWidth:'280px',className:'oilfield-name-popup'}).setLngLat(point).setDOMContent(name).addTo(map);
+    }
+    const close=()=>setObjectCard(null);
+    popup.on('close',close);
+    return ()=>{popup.off('close',close);popup.remove();label?.remove();setCardHost(null);};
+  },[ready,objectCard,language,oilfieldsEnabled,tankersEnabled,oilfields]);
   return (
     <>
+      {cardHost && objectCard && createPortal(objectCard.kind === 'field' ? <FieldDetails field={objectCard.value} /> : <TankerAttributes vessel={objectCard.value} grouped={false} />,cardHost)}
       <div
         ref={element}
         className="world-map"
@@ -518,11 +582,5 @@ export default function WorldMap({
     </>
   );
 }
-
-
-
-
-
-
 
 

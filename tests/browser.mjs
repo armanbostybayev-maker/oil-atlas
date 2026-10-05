@@ -22,6 +22,13 @@ const page = await browser.newPage({
   viewport: { width: 1440, height: 1000 },
   deviceScaleFactor: 1,
 });
+// Optional local fixture: layout checks need no AIS credentials or network feed.
+if (process.argv.includes('--mock-ais')) {
+  await page.route('**/api/tankers', route => route.fulfill({
+    contentType:'application/json',
+    body:JSON.stringify({vessels:[],stream:{ok:true,connected:true,lastPositionAt:new Date().toISOString()}}),
+  }));
+}
 const errors = [],
   consoleErrors = [],
   failed = [],

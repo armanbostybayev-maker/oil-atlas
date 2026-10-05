@@ -1,0 +1,11 @@
+{
+  "source": "OPEC ASB 2025",
+  "sourceUrl": "https://www.opec.org/assets/assetdb/asb-2025.pdf",
+  "year": 2024,
+  "unit": "1000 bbl/day",
+  "retrievedAt": "2026-09-24",
+  "tables": {"crudeExports":"5.2 (printed page 48)","productExports":"5.3 (printed page 49)"},
+  "note": "Crude may include lease condensates and transit. Products may include re-exports and transit. Regional totals and combined Sudans are excluded. Values transcribed from the 2024 column.",
+  "crudeExports": {"CA":3569,"MX":848,"US":4109,"NO":1691,"GB":475,"AU":239,"CN":42,"IN":0,"BN":75,"ID":67,"MY":218,"VN":50,"BR":1707,"CO":473,"EC":356,"TT":51,"VE":656,"BH":138,"IR":1566,"IQ":3364,"KW":1176,"OM":887,"QA":541,"SA":6049,"AE":2717,"DZ":459,"AO":1042,"CG":236,"EG":38,"GQ":56,"GA":204,"LY":1002,"NG":1522,"RU":4524,"AZ":394,"KZ":1426},
+  "productExports": {"CA":456,"MX":224,"US":6648,"BE":574,"FR":341,"DE":601,"IT":484,"NL":2128,"NO":289,"ES":405,"SE":303,"GB":406,"JP":445,"KR":1382,"CN":1238,"IN":1342,"ID":87,"MY":856,"SG":1615,"BR":282,"EC":41,"TT":9,"VE":218,"BH":239,"IR":411,"IQ":186,"KW":1196,"QA":459,"SA":1292,"AE":985,"DZ":516,"AO":24,"CG":5,"EG":35,"GQ":0,"GA":10,"LY":78,"NG":170,"RU":2136,"AZ":16,"KZ":72,"RO":94}
+}

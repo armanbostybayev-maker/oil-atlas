@@ -1,0 +1,118 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { INFRASTRUCTURE_TYPES, defaultInfrastructureVisibility, validateInfrastructureCollection, emptyCollection, infrastructureTileConfig } from "../map/InfrastructureLayer.mjs";
+
+test("six independent infrastructure groups start hidden", () => {
+  assert.equal(INFRASTRUCTURE_TYPES.length, 6);
+  assert.deepEqual(Object.values(defaultInfrastructureVisibility()), Array(6).fill(false));
+});
+test("empty GeoJSON is valid for every group", () => {
+  for (const { id } of INFRASTRUCTURE_TYPES) assert.equal(validateInfrastructureCollection(emptyCollection(), id).features.length, 0);
+});
+test("pipeline geometry must be linear", () => {
+  assert.throws(() => validateInfrastructureCollection({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "Point", coordinates: [0,0] }, properties: {} }] }, "oil"));
+});
+test("facility geometry must be point-based", () => {
+  assert.throws(() => validateInfrastructureCollection({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: [[0,0],[1,1]] }, properties: {} }] }, "stations"));
+});
+
+import { normalizeCollection } from "../scripts/import-infrastructure.mjs";
+const metadata = { type: "oil", source: "Test source", sourceUrl: "https://example.org/data", release: "2026-09", accuracy: "approximate" };
+test("import preserves geometry and provenance and normalizes fields", () => {
+  const result = normalizeCollection({ type: "FeatureCollection", features: [{
+    type: "Feature", geometry: { type: "LineString", coordinates: [[1, 2], [3, 4]] },
+    properties: { "Pipeline Name": "Example", "Length (km)": "12.5", "GEM ID": "a" }
+  }] }, metadata);
+  assert.equal(result.features[0].properties.name, "Example");
+  assert.equal(result.features[0].properties.length_km, 12.5);
+  assert.equal(result.features[0].properties.source, "Test source");
+  assert.equal(result.features[0].properties.source_date, null);
+  assert.equal(result.features[0].properties.source_release, "2026-09");
+  assert.equal(result.features[0].properties.geometry_accuracy, "approximate");
+});
+test("import rejects invalid geographic coordinates", () => {
+  assert.throws(() => normalizeCollection({ type: "FeatureCollection", features: [{
+    type: "Feature", geometry: { type: "LineString", coordinates: [[181, 2], [3, 4]] }, properties: {}
+  }] }, metadata), /Invalid WGS84/);
+});
+
+test("separate segments sharing a project ID are not discarded", () => {
+  const segment = coordinates => ({ type: "Feature", geometry: { type: "LineString", coordinates }, properties: { "GEM ID": "shared" } });
+  const result = normalizeCollection({ type: "FeatureCollection", features: [
+    segment([[1, 2], [3, 4]]), segment([[5, 6], [7, 8]])
+  ] }, metadata);
+  assert.equal(result.features.length, 2);
+  assert.equal(result.features[0].properties.id, "shared");
+  assert.equal(result.features[1].properties.id, "shared");
+});
+
+test("GEM route accuracy, IDs and per-feature dates are preserved", () => {
+  const result = normalizeCollection({ type: "FeatureCollection", features: [{
+    type: "Feature", geometry: { type: "MultiLineString", coordinates: [[[1, 2], [3, 4]]] },
+    properties: { source_id: "P0061", route_accuracy: "very low (straight line/schematic)",
+      source_date: "2023-08-21", source_url: "https://www.gem.wiki/Example", fuel: "Gas" }
+  }] }, { ...metadata, type: "gas" });
+  const p = result.features[0].properties;
+  assert.equal(p.id, "P0061");
+  assert.equal(p.geometry_accuracy, "very low (straight line/schematic)");
+  assert.equal(p.source_date, "2023-08-21");
+  assert.equal(p.source_url, "https://www.gem.wiki/Example");
+  assert.equal(p.product, "Gas");
+});
+
+test("tile configuration is opt-in and validates template URLs", () => {
+  assert.equal(infrastructureTileConfig("oil", {}), null);
+  assert.equal(infrastructureTileConfig("oil", { VITE_OIL_PIPELINE_TILES: "http://invalid/{z}/{x}/{y}.pbf" }), null);
+  assert.equal(infrastructureTileConfig("gas", { VITE_GAS_PIPELINE_TILES: "/tiles/gas/{z}/{x}/{y}.pbf" }).type, "vector");
+  assert.equal(infrastructureTileConfig("gas", { VITE_GAS_PIPELINE_TILES: "https://tiles.example.org/{z}/{x}/{y}.pbf" }).tiles[0], "https://tiles.example.org/{z}/{x}/{y}.pbf");
+});
+
+import { resolve } from "node:path";
+import { assertPrivateTileOutput, tileCommand } from "../scripts/build-infrastructure-tiles.mjs";
+
+test("tile builder refuses outputs inside public web assets", () => {
+  const root = resolve("/tmp/oil-atlas-fixture");
+  assert.throws(() => assertPrivateTileOutput(resolve(root, "public/tiles/oil.mbtiles"), root), /Refusing/);
+  assert.throws(() => assertPrivateTileOutput(resolve(root, "public/oil.mbtiles"), root), /Refusing/);
+  assert.equal(assertPrivateTileOutput(resolve(root, "private/oil.mbtiles"), root), resolve(root, "private/oil.mbtiles"));
+});
+test("tile builder uses expected vector source layer and rejects unknown types", () => {
+  const args = tileCommand({ type: "oil", input: "/tmp/oil.geojson", output: "/tmp/oil.mbtiles" });
+  assert.equal(args[args.indexOf("-l") + 1], "infrastructure_oil");
+  assert.throws(() => tileCommand({ type: "fields", input: "/tmp/fields.geojson", output: "/tmp/fields.mbtiles" }), /Only oil and gas/);
+});
+
+import { publicationIssues } from "../scripts/infrastructure-publication-gate.mjs";
+test("publication gate allows empty placeholders but blocks unapproved routes", () => {
+  const prepared = { status: "prepared_not_published", datasets: [{ type: "oil", features: 2, source_release: null }] };
+  assert.deepEqual(publicationIssues(prepared, [{ type: "oil", features: 0 }]), []);
+  assert.ok(publicationIssues(prepared, [{ type: "oil", features: 2 }]).some(issue => issue.includes("redistribution")));
+});
+test("publication gate requires approval evidence and exact feature count", () => {
+  const manifest = { status: "approved_for_publication", datasets: [{
+    type: "gas", features: 2, source_release: "verified release", redistribution_permission: "verified authorization",
+    permission_url: "https://example.org/permission", attribution: "Required credit"
+  }] };
+  assert.deepEqual(publicationIssues(manifest, [{ type: "gas", features: 2 }]), []);
+  assert.ok(publicationIssues(manifest, [{ type: "gas", features: 3 }]).some(issue => issue.includes("count")));
+});
+
+import { tilePublicationIssues } from "../scripts/infrastructure-publication-gate.mjs";
+test("tile publication requires explicit dataset approval", () => {
+  const env = { VITE_GAS_PIPELINE_TILES: "https://example.org/{z}/{x}/{y}.pbf" };
+  assert.deepEqual(tilePublicationIssues({ status: "prepared_not_published", datasets: [] }, {}), []);
+  assert.ok(tilePublicationIssues({ status: "prepared_not_published", datasets: [] }, env).length > 0);
+  const approved = { status: "approved_for_publication", datasets: [{
+    type: "gas", source_release: "verified release", redistribution_permission: "verified authorization",
+    permission_url: "https://example.org/permission", attribution: "Required credit"
+  }] };
+  assert.deepEqual(tilePublicationIssues(approved, env), []);
+});
+
+import { forbiddenPublicTileFiles } from "../scripts/check-public-tiles.mjs";
+test("public asset scan rejects raw and derived tile files, including nested paths", () => {
+  assert.deepEqual(
+    forbiddenPublicTileFiles(["data/oil.geojson", "tiles/oil.mbtiles", "tiles/gas.pmtiles", "tiles/0/0/0.pbf", "tiles/0/0/1.mvt"]),
+    ["tiles/oil.mbtiles", "tiles/gas.pmtiles", "tiles/0/0/0.pbf", "tiles/0/0/1.mvt"],
+  );
+});

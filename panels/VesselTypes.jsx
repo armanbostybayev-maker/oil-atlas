@@ -26,6 +26,12 @@ export default function VesselTypes({
     () => !window.matchMedia("(max-width: 760px)").matches
   );
   const [query, setQuery] = useState("");
+  useEffect(() => {
+    const mobile = window.matchMedia('(max-width:760px)');
+    const resize = event => { if (event.matches) setOpen(false); };
+    mobile.addEventListener('change',resize);
+    return () => mobile.removeEventListener('change',resize);
+  },[]);
   const all = useRef(null), container = useRef(null);
   const selection = vesselSelectionState(selected);
   const available = Object.values(counts || {}).reduce(

@@ -1,6 +1,7 @@
 ﻿const TANKERMAP_URL = "https://tankermap.com/api/vessels/live";
 
 const numberOrNull = (value) => {
+  if (value == null || String(value).trim() === "") return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 };
@@ -8,7 +9,7 @@ const numberOrNull = (value) => {
 const textOrNull = (value) =>
   value === null || value === undefined || value === "" ? null : String(value);
 
-function normalizeVessel(v) {
+export function normalizeVessel(v) {
   const lat = numberOrNull(v.latitude);
   const lon = numberOrNull(v.longitude);
 
@@ -21,6 +22,9 @@ function normalizeVessel(v) {
     imo: textOrNull(v.imo),
     name: textOrNull(v.name) || "Unknown tanker",
     flag: textOrNull(v.flag),
+    photoUrl: textOrNull(v.photo_url),
+    photoCredit: textOrNull(v.photo_credit),
+    sourceAttributes: { ...v },
 
     vesselType: textOrNull(v.vessel_type) || "Tanker",
     vesselTypeName: textOrNull(v.vessel_type) || "Tanker",
@@ -35,11 +39,15 @@ function normalizeVessel(v) {
 
     status: textOrNull(v.nav_status),
     destination: textOrNull(v.destination),
-    timestamp: textOrNull(v.observed_at) || new Date().toISOString(),
+    timestamp: textOrNull(v.observed_at),
 
     deadweight: numberOrNull(v.deadweight),
     cargoState: textOrNull(v.cargo_state),
     cargoStateConfidence: numberOrNull(v.cargo_state_confidence),
+    cargoStateReason: textOrNull(v.cargo_state_reason),
+    draughtObservedAt: textOrNull(v.draught_observed_at),
+    draughtSource: textOrNull(v.draught_source),
+    draughtAgeHours: numberOrNull(v.draught_age_hours),
     positionSource: textOrNull(v.position_source),
     sanctionsStatus: textOrNull(v.sanctions_status),
 

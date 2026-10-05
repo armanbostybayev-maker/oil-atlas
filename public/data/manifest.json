@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "fingerprint": "d960858a37fbce8ec895f570bfb8ea221d4cb382cd49ab05701e8d61ec699c88",
+  "fingerprint": "9c15136faa178a65b4ff47030266b9d89211d9703f0a464f0e32ac83028396b5",
   "sources": [
     "data/sources/base.json",
     "data/sources/countries.geojson",

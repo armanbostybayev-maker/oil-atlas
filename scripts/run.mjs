@@ -7,14 +7,6 @@ const dependencies = existsSync(path.join(root, "node_modules/vite"))
   ? path.join(root, "node_modules")
   : path.resolve(root, "../frontend/node_modules");
 const command = process.argv[2] || "dev";
-if (command !== "preview") {
-  const result = spawnSync(
-    process.execPath,
-    [path.join(root, "data/preprocess.mjs")],
-    { cwd: root, stdio: "inherit" },
-  );
-  if (result.status) process.exit(result.status);
-}
 const args = command === "dev" ? [] : [command];
 const result = spawnSync(
   process.execPath,
